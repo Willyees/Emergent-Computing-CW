@@ -51,17 +51,58 @@ public class EA implements Runnable{
 			child.evaluate(teamPursuit);
 			replace(child);
 			printStats();
+			//printProportionCompletedAll();
 		}						
 		Individual best = getBest(population);
 		best.print();
 		
 	}
 
+	//Debug functions
+	
+	
+	private void printProportionCompletedAll() {
+		for(Individual i : population) {
+			System.out.println(i.result.getProportionCompleted());
+		}
+	}
+	private void printBestStats() {
+		Individual best = getBest(population);
+		System.out.println("best stats: " + best.result.getFinishTime() + "\t" + best.result.getProportionCompleted() + "\t");
+		printBestStatsEnergy(best);
+	}
+	
+	/*
+	 * Called from printBestStats. Have to pass best individual since is already calculated in the calling function
+	 */
+	private void printBestStatsEnergy(Individual best) {
+		for(double energy : best.result.getEnergyRemaining())
+			System.out.print(energy + " ");
+	}
+	
 	private void printStats() {		
-		System.out.println("" + iteration + "\t" + getBest(population) + "\t" + getWorst(population));		
+		System.out.println("" + iteration + "\t" + getBest(population) + "\t" + getWorst(population));	
+		printBestStats();
+		printNumNoFinished();
 	}
 
-
+	private void printFinishIndividuals() {
+		for(Individual i : population) {
+			System.out.print(i.result.getProportionCompleted() + " ");
+		}
+	}
+	private void printNumNoFinished() {
+		int numberDidntFinish = 0;
+		for(Individual i : population) {
+			if(i.result.getProportionCompleted() < 0.99)
+				numberDidntFinish++;
+		}
+		System.out.println("didnt finish: " + numberDidntFinish);
+		
+	}
+	
+	//End Debug functions
+	
 	private void replace(Individual child) {
 		Individual worst = getWorst(population);
 		if(child.getFitness() < worst.getFitness()){
