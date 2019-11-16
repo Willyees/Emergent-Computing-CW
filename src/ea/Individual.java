@@ -24,7 +24,9 @@ public class Individual {
 		}
 		
 		for(int i = 0; i < pacingStrategy.length; i++){
-			pacingStrategy[i] = Parameters.DEFAULT_WOMENS_PACING_STRATEGY[i];
+			pacingStrategy[i] = Parameters.rnd.nextInt(Parameters.WOMENS_PACING_STRATEGY_RANGE[1] - Parameters.WOMENS_PACING_STRATEGY_RANGE[0] + 1)  + Parameters.WOMENS_PACING_STRATEGY_RANGE[0];
+			if(pacingStrategy[i] > Parameters.WOMENS_PACING_STRATEGY_RANGE[1] || pacingStrategy[i] < Parameters.WOMENS_PACING_STRATEGY_RANGE[0])
+				throw new IllegalArgumentException("outsiderange " + pacingStrategy[i]);
 		}
 		
 	}
@@ -57,7 +59,7 @@ public class Individual {
 	// complete 10% or 90% of the race
 	
 	public double getFitness(){
-		double fitness = 1000;		
+		double fitness = Parameters.lowFitness;		
 		if (result == null || result.getProportionCompleted() < 0.999){
 			return fitness;
 		}

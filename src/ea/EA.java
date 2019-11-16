@@ -42,6 +42,7 @@ public class EA implements Runnable{
 		initialisePopulation();	
 		System.out.println("finished init pop");
 		iteration = 0;
+		Parameters.maxIterations = 1000;
 		while(iteration < Parameters.maxIterations){
 			iteration++;
 			Individual parent1 = tournamentSelection();
@@ -49,26 +50,25 @@ public class EA implements Runnable{
 			Individual child = crossover(parent1, parent2);
 			child = mutate(child);
 			child.evaluate(teamPursuit);
+			
 			replace(child);
-			printStats();
-			//printProportionCompletedAll();
+			printNumNoFinished();
+			Individual best = getBest(population);
+			best.print();
+			//printStatsPopulation();
+			
+		
 		}						
-		Individual best = getBest(population);
-		best.print();
+		
 		
 	}
 
 	//Debug functions
 	
 	
-	private void printProportionCompletedAll() {
-		for(Individual i : population) {
-			System.out.println(i.result.getProportionCompleted());
-		}
-	}
 	private void printBestStats() {
 		Individual best = getBest(population);
-		System.out.println("best stats: " + best.result.getFinishTime() + "\t" + best.result.getProportionCompleted() + "\t");
+		System.out.println("best stats: " + "time: " + best.result.getFinishTime() + "\t completed: " + best.result.getProportionCompleted() + "\t");
 		printBestStatsEnergy(best);
 	}
 	
@@ -77,18 +77,39 @@ public class EA implements Runnable{
 	 */
 	private void printBestStatsEnergy(Individual best) {
 		for(double energy : best.result.getEnergyRemaining())
-			System.out.print(energy + " ");
+			System.out.print("remaining energy: " + energy + " ");
 	}
 	
+	private int getLowFitnessNumPopulation() {
+		int lowFitnessCounter = 0;
+		for(Individual i : population) {
+			if(i.getFitness() > 999)
+				lowFitnessCounter++;
+		}
+		return lowFitnessCounter;
+		
+	}
 	private void printStats() {		
 		System.out.println("" + iteration + "\t" + getBest(population) + "\t" + getWorst(population));	
 		printBestStats();
 		printNumNoFinished();
 	}
 
+	/**
+	 * print for the whole population different stats (proportion completed and energy remaining)
+	 */
+	private void printStatsPopulation() {
+		for(Individual i : population) {
+			System.out.println("completed%: " + i.result.getProportionCompleted() + "\t energy: " + i.result.getEnergyRemaining());
+		}
+		System.out.println("\t lowfitnessNum: " + getLowFitnessNumPopulation());
+	}
+	/**
+	 * Print the proportion completed for the whole population
+	 */
 	private void printFinishIndividuals() {
 		for(Individual i : population) {
-			System.out.print(i.result.getProportionCompleted() + " ");
+			System.out.println(i.result.getProportionCompleted() + " ");
 		}
 	}
 	private void printNumNoFinished() {
@@ -98,6 +119,7 @@ public class EA implements Runnable{
 				numberDidntFinish++;
 		}
 		System.out.println("didnt finish: " + numberDidntFinish);
+		
 		
 	}
 	
