@@ -39,28 +39,36 @@ public class EA implements Runnable{
 	}
 
 	public void run() {
-		initialisePopulation();	
-		System.out.println("finished init pop");
-		iteration = 0;
-		Parameters.maxIterations = 1000;
-		while(iteration < Parameters.maxIterations){
-			iteration++;
-			Individual parent1 = tournamentSelection();
-			Individual parent2 = tournamentSelection();
-			Individual child = crossover(parent1, parent2);
-			child = mutate(child);
-			child.evaluate(teamPursuit);
+		
+		int successrounds = 0;
+		Parameters.maxIterations = 250;
+		for(int outerIteration = 0; outerIteration < 25; outerIteration++) {
+			initialisePopulation();	
+			System.out.println("finished init pop");
+			iteration = 0;
 			
-			replace(child);
-			printNumNoFinished();
+			while(iteration < Parameters.maxIterations){
+				iteration++;
+				Individual parent1 = tournamentSelection();
+				Individual parent2 = tournamentSelection();
+				Individual child = crossover(parent1, parent2);
+				child = mutate(child);
+				child.evaluate(teamPursuit);
+				
+				replace(child);
+				printNumNoFinished();
+				//Individual best = getBest(population);
+				//best.print();
+				//printStatsPopulation();
+			}
 			Individual best = getBest(population);
 			best.print();
-			//printStatsPopulation();
-			
-		
+			iteration = 0;
+			if(getMeanFitness() != 1000.0)
+				successrounds++;
 		}						
 		
-		
+		System.out.println("Success rounds: " + successrounds);
 	}
 
 	//Debug functions
@@ -99,10 +107,10 @@ public class EA implements Runnable{
 	 * print for the whole population different stats (proportion completed and energy remaining)
 	 */
 	private void printStatsPopulation() {
-		for(Individual i : population) {
-			System.out.println("completed%: " + i.result.getProportionCompleted() + "\t energy: " + i.result.getEnergyRemaining());
-		}
-		System.out.println("\t lowfitnessNum: " + getLowFitnessNumPopulation());
+//		for(Individual i : population) {
+//			System.out.println("completed%: " + i.result.getProportionCompleted() + "\t energy: " + i.result.getEnergyRemaining());
+//		}
+		System.out.println("lowfitnessNum: " + getLowFitnessNumPopulation() + "\t meanFit: " + getMeanFitness() + "\t stddev: " + getStdDevFitness());
 	}
 	/**
 	 * Print the proportion completed for the whole population
@@ -123,12 +131,35 @@ public class EA implements Runnable{
 		
 	}
 	
+	
+	
+	private double getMeanFitness() {
+		double mean = 0.0;
+		for(Individual i : population) {
+			mean += i.getFitness();
+		}
+		mean /= population.size();
+		return mean;
+	}
+	
+	private double getStdDevFitness() {
+		double stddev = 0.0;
+		double mean = getMeanFitness();
+		for(Individual i : population) {
+			stddev += Math.pow((i.getFitness() - mean), 2);
+		}
+		stddev /= population.size();
+		stddev = Math.sqrt(stddev);
+		return stddev;
+	}
+	
 	//End Debug functions
 	
 	private void replace(Individual child) {
 		Individual worst = getWorst(population);
 		if(child.getFitness() < worst.getFitness()){
 			int idx = population.indexOf(worst);
+			System.out.println("replaced worst: " + idx); 
 			population.set(idx, child);
 		}
 	}
@@ -196,24 +227,30 @@ public class EA implements Runnable{
 	private Individual getBest(ArrayList<Individual> aPopulation) {
 		double bestFitness = Double.MAX_VALUE;
 		Individual best = null;
+		int idx = 0;
 		for(Individual individual : aPopulation){
 			if(individual.getFitness() < bestFitness || best == null){
 				best = individual;
 				bestFitness = best.getFitness();
+				idx++;
 			}
 		}
+		//System.out.println("best idx: " + idx);
 		return best;
 	}
 
 	private Individual getWorst(ArrayList<Individual> aPopulation) {
 		double worstFitness = 0;
 		Individual worst = null;
+		int idx = 0;
 		for(Individual individual : population){
 			if(individual.getFitness() > worstFitness || worst == null){
 				worst = individual;
 				worstFitness = worst.getFitness();
+				idx++;
 			}
 		}
+		//System.out.println("worst: " + idx);
 		return worst;
 	}
 	
@@ -224,6 +261,8 @@ public class EA implements Runnable{
 	}
 
 	private void initialisePopulation() {
+		System.out.println("cleared population");
+		population.clear();
 		while(population.size() < Parameters.popSize){
 			Individual individual = new Individual();
 			individual.initialise();			
