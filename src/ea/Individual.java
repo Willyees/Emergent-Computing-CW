@@ -25,9 +25,11 @@ public class Individual {
 		
 		for(int i = 0; i < pacingStrategy.length; i++){
 			pacingStrategy[i] = Parameters.rnd.nextInt(Parameters.WOMENS_PACING_STRATEGY_RANGE[1] - Parameters.WOMENS_PACING_STRATEGY_RANGE[0] + 1)  + Parameters.WOMENS_PACING_STRATEGY_RANGE[0];
+			
 			if(pacingStrategy[i] > Parameters.WOMENS_PACING_STRATEGY_RANGE[1] || pacingStrategy[i] < Parameters.WOMENS_PACING_STRATEGY_RANGE[0])
 				throw new IllegalArgumentException("outsiderange " + pacingStrategy[i]);
 		}
+		
 		
 	}
 	
@@ -52,16 +54,10 @@ public class Individual {
 		}		
 	}
 	
-	// this is a very basic fitness function
-	// if the race is not completed, the chromosome gets fitness 1000
-	// otherwise, the fitness is equal to the time taken
-	// chromosomes that don't complete all get the same fitness (i.e regardless of whether they 
-	// complete 10% or 90% of the race
-	
 	public double getFitness(){
 		double fitness = Parameters.lowFitness;		
 		if (result == null || result.getProportionCompleted() < 0.999){
-			return fitness;
+			fitness *= (0.999 - result.getProportionCompleted()); 
 		}
 		else{				
 			fitness = result.getFinishTime();

@@ -40,14 +40,16 @@ public class EA implements Runnable{
 
 	public void run() {
 		
-		int successrounds = 0;
-		Parameters.maxIterations = 250;
+		//int successrounds = 0;
+		Parameters.maxIterations = 500;
 		for(int outerIteration = 0; outerIteration < 25; outerIteration++) {
 			initialisePopulation();	
-			System.out.println("finished init pop");
 			iteration = 0;
-			
+			int counter = 0;
+			int convergeStdDev = 0;
+			boolean notfound = true;
 			while(iteration < Parameters.maxIterations){
+				
 				iteration++;
 				Individual parent1 = tournamentSelection();
 				Individual parent2 = tournamentSelection();
@@ -56,19 +58,25 @@ public class EA implements Runnable{
 				child.evaluate(teamPursuit);
 				
 				replace(child);
-				printNumNoFinished();
-				//Individual best = getBest(population);
-				//best.print();
+				//printNumNoFinished();
+//				Individual best = getBest(population);
+//				best.print();
 				//printStatsPopulation();
+				if(getStdDevFitness() < 5.0 && notfound) {
+					notfound = false;
+					convergeStdDev = counter;
+				}
+				counter++;
 			}
+			System.out.println("converge stddev: " + convergeStdDev);
 			Individual best = getBest(population);
 			best.print();
 			iteration = 0;
-			if(getMeanFitness() != 1000.0)
-				successrounds++;
+//			if(getMeanFitness() != 1000.0)
+//				successrounds++;
 		}						
-		
-		System.out.println("Success rounds: " + successrounds);
+//		
+//		System.out.println("Success rounds: " + successrounds);
 	}
 
 	//Debug functions
@@ -159,7 +167,7 @@ public class EA implements Runnable{
 		Individual worst = getWorst(population);
 		if(child.getFitness() < worst.getFitness()){
 			int idx = population.indexOf(worst);
-			System.out.println("replaced worst: " + idx); 
+			//System.out.println("replaced worst: " + idx); 
 			population.set(idx, child);
 		}
 	}
