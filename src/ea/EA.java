@@ -198,13 +198,17 @@ public class EA implements Runnable{
 		
 		// mutate the transition strategy
 
-			//mutate the transition strategy by flipping boolean value
-			for(int i = 0; i < mutationRate; i++){
-				int index = Parameters.rnd.nextInt(child.transitionStrategy.length);
-				child.transitionStrategy[index] = !child.transitionStrategy[index];
-			}
+		//mutate the transition strategy by flipping boolean value
+		for(int i = 0; i < mutationRate; i++){
+			int index = Parameters.rnd.nextInt(child.transitionStrategy.length);
+			child.transitionStrategy[index] = !child.transitionStrategy[index];
+		}
 			
-		
+		//mutate the pacing strategy
+		for(int i = 0; i < mutationRate; i++) {
+			int index = Parameters.rnd.nextInt(child.pacingStrategy.length);
+			child.pacingStrategy[index] = Parameters.rnd.nextInt(Parameters.WOMENS_PACING_STRATEGY_RANGE[1] - Parameters.WOMENS_PACING_STRATEGY_RANGE[0] + 1)  + Parameters.WOMENS_PACING_STRATEGY_RANGE[0];
+		}
 		
 		return child;
 	}
