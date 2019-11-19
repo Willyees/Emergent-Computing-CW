@@ -42,8 +42,8 @@ public class EA implements Runnable{
 	}
 
 	public void testSpecificChromosome() {
-		boolean[] transitionStrategy = {true,true,true,true,true,true,true,true,false,false,true,true,false,false,true,false,false,false,false,false,false,true};
-		int[] pacingStrategy = {382,615,368,661,433,428,322,719,744,246,289,522,274,217,800,462,200,385,386,346,296,542,666};
+		boolean[] transitionStrategy = {false,true,true,false,false,false,true,true,true,false,true,false,false,false,true,true,true,false,false,true,false,false};
+		int[] pacingStrategy = {495,561,236,218,319,222,366,376,472,492,489,301,340,324,657,322,306,269,442,303,547,513,673};
 		
 		try {
 			SimulationResult result = teamPursuit.simulate(transitionStrategy, pacingStrategy);
@@ -56,13 +56,13 @@ public class EA implements Runnable{
 	public void run() {
 		
 		//int successrounds = 0;
-		Parameters.maxIterations = 500;
+		Parameters.maxIterations = 100;
 		//for(int outerIteration = 0; outerIteration < 25; outerIteration++) {
 			initialisePopulation();	
 			iteration = 0;
-			int counter = 0;
-			int convergeStdDev = 0;
-			boolean notfound = true;
+			//int counter = 0;
+			//int convergeStdDev = 0;
+			//boolean notfound = true;
 			while(iteration < Parameters.maxIterations){
 				
 				iteration++;
@@ -73,7 +73,7 @@ public class EA implements Runnable{
 				child.evaluate(teamPursuit);
 				
 				replace(child);
-				printNumNoFinished();
+				//printNumNoFinished();
 //				Individual best = getBest(population);
 //				best.print();
 				printStatsPopulation();
@@ -83,13 +83,16 @@ public class EA implements Runnable{
 //				}
 //				counter++;
 			//}
-			System.out.println("converge stddev: " + convergeStdDev);
-			Individual best = getBest(population);
-			best.print();
-			iteration = 0;
+			//System.out.println("converge stddev: " + convergeStdDev);
+			
+			//iteration = 0;
 //			if(getMeanFitness() != 1000.0)
 //				successrounds++;
-		}						
+		}			
+			Individual best = getBest(population);
+			best.print();
+			best.result.getFinishTime();
+			printBestStatsEnergy(best);
 //		
 //		System.out.println("Success rounds: " + successrounds);
 	}
@@ -182,7 +185,7 @@ public class EA implements Runnable{
 		Individual worst = getWorst(population);
 		if(child.getFitness() < worst.getFitness()){
 			int idx = population.indexOf(worst);
-			System.out.println("replaced worst: " + idx); 
+			//System.out.println("replaced worst: " + idx); 
 			population.set(idx, child);
 		}
 	}

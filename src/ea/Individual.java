@@ -62,7 +62,9 @@ public class Individual {
 		}
 		else{				
 			fitness = result.getFinishTime();
+			
 		}
+		
 		return fitness;
 	}
 	
@@ -101,6 +103,7 @@ public class Individual {
 				System.out.print("false,");
 			}
 		}
+		System.out.print("\ntime best: " + result.getFinishTime());
 		System.out.println("\r\n" + this);
 	}
 }
