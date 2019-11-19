@@ -17,6 +17,8 @@ package ea;
 
 
 import java.util.ArrayList;
+
+import teamPursuit.SimulationResult;
 import teamPursuit.TeamPursuit;
 import teamPursuit.WomensTeamPursuit;
 
@@ -35,14 +37,27 @@ public class EA implements Runnable{
 	
 	public static void main(String[] args) {
 		EA ea = new EA();
+		//ea.testSpecificChromosome();
 		ea.run();
 	}
 
+	public void testSpecificChromosome() {
+		boolean[] transitionStrategy = {true,true,true,true,true,true,true,true,false,false,true,true,false,false,true,false,false,false,false,false,false,true};
+		int[] pacingStrategy = {382,615,368,661,433,428,322,719,744,246,289,522,274,217,800,462,200,385,386,346,296,542,666};
+		
+		try {
+			SimulationResult result = teamPursuit.simulate(transitionStrategy, pacingStrategy);
+			System.out.println("evaluated: " + result.getFinishTime());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+	}
 	public void run() {
 		
 		//int successrounds = 0;
 		Parameters.maxIterations = 500;
-		for(int outerIteration = 0; outerIteration < 25; outerIteration++) {
+		//for(int outerIteration = 0; outerIteration < 25; outerIteration++) {
 			initialisePopulation();	
 			iteration = 0;
 			int counter = 0;
@@ -58,16 +73,16 @@ public class EA implements Runnable{
 				child.evaluate(teamPursuit);
 				
 				replace(child);
-				//printNumNoFinished();
+				printNumNoFinished();
 //				Individual best = getBest(population);
 //				best.print();
-				//printStatsPopulation();
-				if(getStdDevFitness() < 5.0 && notfound) {
-					notfound = false;
-					convergeStdDev = counter;
-				}
-				counter++;
-			}
+				printStatsPopulation();
+//				if(getStdDevFitness() < 5.0 && notfound) {
+//					notfound = false;
+//					convergeStdDev = counter;
+//				}
+//				counter++;
+			//}
 			System.out.println("converge stddev: " + convergeStdDev);
 			Individual best = getBest(population);
 			best.print();
@@ -167,7 +182,7 @@ public class EA implements Runnable{
 		Individual worst = getWorst(population);
 		if(child.getFitness() < worst.getFitness()){
 			int idx = population.indexOf(worst);
-			//System.out.println("replaced worst: " + idx); 
+			System.out.println("replaced worst: " + idx); 
 			population.set(idx, child);
 		}
 	}

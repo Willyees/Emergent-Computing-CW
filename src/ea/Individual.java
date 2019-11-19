@@ -57,7 +57,8 @@ public class Individual {
 	public double getFitness(){
 		double fitness = Parameters.lowFitness;		
 		if (result == null || result.getProportionCompleted() < 0.999){
-			fitness *= (0.999 - result.getProportionCompleted()); 
+			double additional = fitness * (0.999 - result.getProportionCompleted());
+			fitness += additional; 
 		}
 		else{				
 			fitness = result.getFinishTime();
