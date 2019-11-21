@@ -37,17 +37,24 @@ public class EA implements Runnable{
 	
 	public static void main(String[] args) {
 		EA ea = new EA();
-		//ea.testSpecificChromosome();
-		ea.run();
+		ea.testSpecificChromosome();
+		//ea.run();
 	}
 
 	public void testSpecificChromosome() {
-		boolean[] transitionStrategy = {false,true,true,false,false,false,true,true,true,false,true,false,false,false,true,true,true,false,false,true,false,false};
-		int[] pacingStrategy = {495,561,236,218,319,222,366,376,472,492,489,301,340,324,657,322,306,269,442,303,547,513,673};
+		boolean[] transitionStrategy = {true,false,true,false,true,true,true,false,false,false,true,true,true,true,false,true,false,false,false,false,false,false};
+		int[] pacingStrategy = {424,372,257,470,251,475,416,480,421,434,414,410,474,483,457,441,316,475,411,455,488,289,388};
 		
 		try {
 			SimulationResult result = teamPursuit.simulate(transitionStrategy, pacingStrategy);
 			System.out.println("evaluated: " + result.getFinishTime());
+			System.out.println("proportion: " + result.getProportionCompleted());
+			double[] velocities = result.getVelocityProfile();
+			System.out.print("velocities: ");
+			for(double velocity : velocities) {
+				System.out.print(velocity + "  ");
+			}
+			
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -56,13 +63,12 @@ public class EA implements Runnable{
 	public void run() {
 		
 		//int successrounds = 0;
-		Parameters.maxIterations = 100;
+		Parameters.maxIterations = 500;
 		//for(int outerIteration = 0; outerIteration < 25; outerIteration++) {
 			initialisePopulation();	
 			iteration = 0;
-			//int counter = 0;
-			//int convergeStdDev = 0;
-			//boolean notfound = true;
+			
+			
 			while(iteration < Parameters.maxIterations){
 				
 				iteration++;
@@ -74,24 +80,18 @@ public class EA implements Runnable{
 				
 				replace(child);
 				//printNumNoFinished();
-//				Individual best = getBest(population);
-//				best.print();
-				printStatsPopulation();
-//				if(getStdDevFitness() < 5.0 && notfound) {
-//					notfound = false;
-//					convergeStdDev = counter;
-//				}
-//				counter++;
+				//Individual best = getBest(population);
+				//best.print();
+				//printStatsPopulation();
+//				
 			//}
-			//System.out.println("converge stddev: " + convergeStdDev);
+			
 			
 			//iteration = 0;
-//			if(getMeanFitness() != 1000.0)
-//				successrounds++;
+//			
 		}			
 			Individual best = getBest(population);
 			best.print();
-			best.result.getFinishTime();
 			printBestStatsEnergy(best);
 //		
 //		System.out.println("Success rounds: " + successrounds);

@@ -64,6 +64,10 @@ public class Individual {
 			fitness = result.getFinishTime();
 			
 		}
+		double[] energies = result.getEnergyRemaining();
+		for(double energy : energies) {
+			fitness += energy;
+		}
 		
 		return fitness;
 	}
@@ -103,7 +107,8 @@ public class Individual {
 				System.out.print("false,");
 			}
 		}
-		System.out.print("\ntime best: " + result.getFinishTime());
+		System.out.println("\ntime best: " + result.getFinishTime());
+		System.out.println("proportion completed: " + result.getProportionCompleted());
 		System.out.println("\r\n" + this);
 	}
 }
