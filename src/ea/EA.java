@@ -208,7 +208,7 @@ public class EA implements Runnable{
 		//mutate the pacing strategy
 		for(int i = 0; i < mutationRate; i++) {
 			int index = Parameters.rnd.nextInt(child.pacingStrategy.length);
-			child.pacingStrategy[index] = Parameters.rnd.nextInt(Parameters.WOMENS_PACING_STRATEGY_RANGE[1] - Parameters.WOMENS_PACING_STRATEGY_RANGE[0] + 1)  + Parameters.WOMENS_PACING_STRATEGY_RANGE[0];
+			child.pacingStrategy[index] = Parameters.rnd.nextInt(Parameters.WOMENS_PACING_STRATEGY_RANGE_MUTATION[1] - Parameters.WOMENS_PACING_STRATEGY_RANGE_MUTATION[0] + 1)  + Parameters.WOMENS_PACING_STRATEGY_RANGE_MUTATION[0];
 		}
 		
 		return child;
