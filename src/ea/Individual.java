@@ -55,21 +55,62 @@ public class Individual {
 	}
 	
 	public double getFitness(){
-		double fitness = Parameters.lowFitness;		
-		if (result == null || result.getProportionCompleted() < 0.999){
-			double additional = fitness * (0.999 - result.getProportionCompleted());
-			fitness += additional; 
+//		double fitness = Parameters.lowFitness;		
+//		if (result == null || result.getProportionCompleted() < 0.999){
+//			double additional = fitness * (0.999 - result.getProportionCompleted());
+//			fitness += additional; 
+//		}
+//		else{				
+//			fitness = result.getFinishTime();
+//			
+//		}
+		double total = 0.0;
+		int segment_finished = -1;
+		double[] velocities = result.getVelocityProfile();
+		for(int race_segment = 0; race_segment < 23; race_segment++) {
+			double velocity = velocities[race_segment];
+			if(velocity == 0.0) {
+				segment_finished = race_segment;
+				break;
+			}
+			if(race_segment == 0 || race_segment == 22) { //if first or last
+				total += (187.5 / velocity);
+				
+			}
+			else {
+				total += (Parameters.WOMENS_HALF_LAP_DISTANCE / velocity);
+			}
 		}
-		else{				
-			fitness = result.getFinishTime();
-			
+		if(segment_finished != -1) {
+			//System.out.print("didnt finish");
+			double average_spd = 0.0;
+			for(int i = 0; i < segment_finished; i++) {
+				average_spd += velocities[i];
+				 //segment finished is the next segment that was not done
+			}
+			average_spd /= segment_finished;
+			int segments_left = 23 - segment_finished; //how many segments are missing
+			//DEBUG
+			int count = 0;
+			for(double v : velocities) {
+				if(v == 0.0)
+					count++;
+			}
+			if(count != segments_left)
+				throw new IllegalArgumentException("segments left different from 0.0 velociteis");
+			//END DEBUG
+			total += (segments_left - 1) * Parameters.WOMENS_HALF_LAP_DISTANCE /  average_spd * 1.2 + (187.5 / average_spd * 1.2); 
+				
+			//System.out.print("fitness: " + total + "\n");	
 		}
-		double[] energies = result.getEnergyRemaining();
-		for(double energy : energies) {
-			fitness += energy;
-		}
+//		else
+//			System.out.print("finsihed");
+//		double[] energies = result.getEnergyRemaining();
+//		for(double energy : energies) {
+//			fitness += energy;
+//		}
 		
-		return fitness;
+		return total;
 	}
 	
 	

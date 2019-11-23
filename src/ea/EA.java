@@ -37,27 +37,25 @@ public class EA implements Runnable{
 	
 	public static void main(String[] args) {
 		EA ea = new EA();
-		ea.testSpecificChromosome();
-		//ea.run();
+		//ea.testSpecificChromosome();
+		ea.run();
 	}
 
 	public void testSpecificChromosome() {
-		boolean[] transitionStrategy = {true,false,true,false,true,true,true,false,false,false,true,true,true,true,false,true,false,false,false,false,false,false};
-		int[] pacingStrategy = {424,372,257,470,251,475,416,480,421,434,414,410,474,483,457,441,316,475,411,455,488,289,388};
+		boolean[] transitionStrategy = {false,true,true,false,false,true,true,true,true,false,false,true,true,false,true,false,true,true,true,true,false,false};
+		int[] pacingStrategy = {471,449,488,462,496,295,461,458,485,455,388,445,464,209,464,460,384,336,388,441,366,376,434};
 		
 		try {
 			SimulationResult result = teamPursuit.simulate(transitionStrategy, pacingStrategy);
 			System.out.println("evaluated: " + result.getFinishTime());
+			double finish = result.getFinishTime();
+			System.out.println(finish);
 			System.out.println("proportion: " + result.getProportionCompleted());
-			double[] velocities = result.getVelocityProfile();
-			System.out.print("velocities: ");
-			for(double velocity : velocities) {
-				System.out.print(velocity + "  ");
-			}
 			
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+		
 		
 	}
 	public void run() {
@@ -79,7 +77,7 @@ public class EA implements Runnable{
 				child.evaluate(teamPursuit);
 				
 				replace(child);
-				//printNumNoFinished();
+				printNumNoFinished();
 				//Individual best = getBest(population);
 				//best.print();
 				//printStatsPopulation();
