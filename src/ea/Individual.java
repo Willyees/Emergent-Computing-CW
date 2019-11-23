@@ -64,11 +64,7 @@ public class Individual {
 			fitness = result.getFinishTime();
 			
 		}
-		double[] energies = result.getEnergyRemaining();
-		for(double energy : energies) {
-			fitness += energy;
-		}
-		
+				
 		return fitness;
 	}
 	

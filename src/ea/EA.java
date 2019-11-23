@@ -37,8 +37,8 @@ public class EA implements Runnable{
 	
 	public static void main(String[] args) {
 		EA ea = new EA();
-		ea.testSpecificChromosome();
-		//ea.run();
+		//ea.testSpecificChromosome();
+		ea.run();
 	}
 
 	public void testSpecificChromosome() {
@@ -210,7 +210,7 @@ public class EA implements Runnable{
 		//mutate the pacing strategy
 		for(int i = 0; i < mutationRate; i++) {
 			int index = Parameters.rnd.nextInt(child.pacingStrategy.length);
-			child.pacingStrategy[index] = Parameters.rnd.nextInt(Parameters.WOMENS_PACING_STRATEGY_RANGE[1] - Parameters.WOMENS_PACING_STRATEGY_RANGE[0] + 1)  + Parameters.WOMENS_PACING_STRATEGY_RANGE[0];
+			child.pacingStrategy[index] = Parameters.rnd.nextInt(Parameters.WOMENS_PACING_STRATEGY_RANGE_MUTATION[1] - Parameters.WOMENS_PACING_STRATEGY_RANGE_MUTATION[0] + 1)  + Parameters.WOMENS_PACING_STRATEGY_RANGE_MUTATION[0];
 		}
 		
 		return child;
@@ -223,18 +223,23 @@ public class EA implements Runnable{
 		}
 		Individual child = new Individual();
 		
-		int crossoverPoint = Parameters.rnd.nextInt(parent1.transitionStrategy.length);
 		
-		// just copy the pacing strategy from p1 - not evolving in this version
-		for(int i = 0; i < parent1.pacingStrategy.length; i++){			
+		
+		//pacing strategy
+		int crossoverPointPacing = Parameters.rnd.nextInt(parent1.pacingStrategy.length);
+		for(int i = 0; i < crossoverPointPacing; i++){
 			child.pacingStrategy[i] = parent1.pacingStrategy[i];
 		}
+		for(int i = crossoverPointPacing; i < parent2.pacingStrategy.length; i++){
+			child.pacingStrategy[i] = parent2.pacingStrategy[i];
+		}
 		
-		
-		for(int i = 0; i < crossoverPoint; i++){
+		//transition strategy
+		int crossoverPointTransition = Parameters.rnd.nextInt(parent1.transitionStrategy.length);
+		for(int i = 0; i < crossoverPointTransition; i++){
 			child.transitionStrategy[i] = parent1.transitionStrategy[i];
 		}
-		for(int i = crossoverPoint; i < parent2.transitionStrategy.length; i++){
+		for(int i = crossoverPointTransition; i < parent2.transitionStrategy.length; i++){
 			child.transitionStrategy[i] = parent2.transitionStrategy[i];
 		}
 		return child;
