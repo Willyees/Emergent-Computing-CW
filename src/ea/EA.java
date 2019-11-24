@@ -61,44 +61,52 @@ public class EA implements Runnable{
 		
 	}
 	public void run() {
-		
 		//int successrounds = 0;
-		Parameters.maxIterations = 1000;
+		Parameters.maxIterations = 500;
 		//for(int outerIteration = 0; outerIteration < 25; outerIteration++) {
 			initialisePopulation();	
-			iteration = 0;
 			
+			iteration = 0;
+			ArrayList<Individual> modified = new ArrayList<Individual>(Parameters.applyMoveOperator);
 			
 			while(iteration < Parameters.maxIterations){
-				
+				modified.clear();
 				iteration++;
-				Individual parent1 = tournamentSelection();
-				Individual parent2 = tournamentSelection();
-				Individual child = crossover(parent1, parent2);
-				child = mutate(child);
-				child.evaluate(teamPursuit);
-				getStdDevPop();
-				replace(child);
-				printNumNoFinished();
+				int index = getRandomIndividualIndex();
+				
+			
+				//population.get(index).evaluate(teamPursuit);
+				for(int i = 0; i < Parameters.applyMoveOperator; i++) {
+					Parameters.mutationRateMax = Parameters.WOMENS_TRANSITION_N / Parameters.applyMoveOperator * (i + 1);//setting mutation rate 4-8-12-16-20
+					Individual i1 = population.get(index).copy();
+					moveOperatorMutate(i1);
+					i1.evaluate(teamPursuit);
+					modified.add(i1);
+				}
+				
+				for(Individual i : modified) {
+					printStatsIndividual(i);
+					replace(i, index);
+				}
+				
+				
 				//Individual best = getBest(population);
 				//best.print();
 				printStatsPopulation();
-				printStdDevPop();
-				
-			//}
-			
-			
-			//iteration = 0;
-//			
+		
 		}			
 			Individual best = getBest(population);
 			best.print();
-			printBestStatsEnergy(best);
-//		
+			printBestStatsEnergy(best);		
 //		System.out.println("Success rounds: " + successrounds);
 	}
 
 	//Debug functions
+	
+	private void printStatsIndividual(Individual i) {
+		System.out.println("individual: " + "time: " + i.result.getFinishTime() + "\t completed: " + i.result.getProportionCompleted() + "\t");
+	}
+	
 	private void printPacingPop() {
 		for(Individual i : population) {
 			for(int index = 0; index < i.pacingStrategy.length; index++)
@@ -139,9 +147,6 @@ public class EA implements Runnable{
 		return stddev;
 	}
 		
-		
-	
-	
 	
 	private void printBestStats() {
 		Individual best = getBest(population);
@@ -224,23 +229,27 @@ public class EA implements Runnable{
 	
 	//End Debug functions
 	
-	private void replace(Individual child) {
-		Individual worst = getWorst(population);
-		if(child.getFitness() < worst.getFitness()){
-			int idx = population.indexOf(worst);
-			System.out.println("replaced worst: " + idx); 
-			population.set(idx, child);
+	private void replace(Individual child, int index) {
+		
+		if(child.getFitness() < population.get(index).getFitness()){
+			System.out.println("replaced"); 
+			population.set(index, child);
 		}
 	}
 
+	private Individual getRandomIndividual() {
+		int index = Parameters.rnd.nextInt(population.size());
+		return population.get(index);
+	}
+	
+	private int getRandomIndividualIndex() {
+		return Parameters.rnd.nextInt(population.size());
+	}
 
 	private Individual mutate(Individual child) {
-		if(Parameters.rnd.nextDouble() > Parameters.mutationProbability){
-			return child;
-		}
 		
-		// choose how many elements to alter
-		int mutationRate = 1 + Parameters.rnd.nextInt(Parameters.mutationRateMax);
+		// choose how many elements to alter - static. not using randomness here
+		int mutationRate = Parameters.mutationRateMax;
 		
 		// mutate the transition strategy
 
@@ -259,7 +268,39 @@ public class EA implements Runnable{
 		return child;
 	}
 
-
+	/**
+	 *move operator. at the moment using the usual mutate operator
+	 */
+	private Individual moveOperatorMutate(Individual i) {
+		return mutate(i);	
+	}
+	
+	//not very good because there is no exploration for the pacing strategy
+	private Individual moveOperatorSwap(Individual i) {
+		//transition
+		int[] indexSwapTransition = new int[Parameters.swapOperator];
+		indexSwapTransition[0] = Parameters.rnd.nextInt(i.transitionStrategy.length);
+		for(int index = 1; index < Parameters.swapOperator; index++) {
+			indexSwapTransition[index] = Parameters.rnd.nextInt(i.transitionStrategy.length);
+			boolean temp = i.transitionStrategy[index - 1];
+			i.transitionStrategy[index - 1] = i.transitionStrategy[index];
+			i.transitionStrategy[index] = temp;
+		}
+		
+				
+		//pacing
+		int[] indexSwapPacing = new int[Parameters.swapOperator];
+		indexSwapPacing[0] = Parameters.rnd.nextInt(i.pacingStrategy.length);
+		for(int index = 1; index < Parameters.swapOperator; index++) {
+			indexSwapPacing[index] = Parameters.rnd.nextInt(i.pacingStrategy.length);
+			int temp = i.pacingStrategy[index - 1];
+			i.pacingStrategy[index - 1] = i.pacingStrategy[index];
+			i.pacingStrategy[index] = temp;
+		}
+		
+		return i;
+	}
+	
 	private Individual crossover(Individual parent1, Individual parent2) {
 		if(Parameters.rnd.nextDouble() > Parameters.crossoverProbability){
 			return parent1;
