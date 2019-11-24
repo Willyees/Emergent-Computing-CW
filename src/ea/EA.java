@@ -18,6 +18,8 @@ package ea;
 
 import java.util.ArrayList;
 
+//import com.sun.org.apache.xalan.internal.xsltc.runtime.Parameter;
+
 import teamPursuit.SimulationResult;
 import teamPursuit.TeamPursuit;
 import teamPursuit.WomensTeamPursuit;
@@ -62,32 +64,38 @@ public class EA implements Runnable{
 	}
 	public void run() {
 		//int successrounds = 0;
-		Parameters.maxIterations = 500;
+		Parameters.maxIterations = 1000;
 		//for(int outerIteration = 0; outerIteration < 25; outerIteration++) {
 			initialisePopulation();	
 			
 			iteration = 0;
+			int counterPreviousChrom = 0;
 			ArrayList<Individual> modified = new ArrayList<Individual>(Parameters.applyMoveOperator);
-			
-			while(iteration < Parameters.maxIterations){
+			int index = 0;
+			while(iteration < Parameters.maxIterations && Parameters.currentTemp > Parameters.finalTemp){
 				modified.clear();
 				iteration++;
-				int index = getRandomIndividualIndex();
 				
-			
+				//int index = getRandomIndividualIndex(); //not using because only 1 chormosome in the population
+				
+				Individual i1 = population.get(index).copy();
+				moveOperatorMutate(i1);
+				i1.evaluate(teamPursuit);
+				replace(i1, index);
+				
 				//population.get(index).evaluate(teamPursuit);
-				for(int i = 0; i < Parameters.applyMoveOperator; i++) {
-					Parameters.mutationRateMax = Parameters.WOMENS_TRANSITION_N / Parameters.applyMoveOperator * (i + 1);//setting mutation rate 4-8-12-16-20
-					Individual i1 = population.get(index).copy();
-					moveOperatorMutate(i1);
-					i1.evaluate(teamPursuit);
-					modified.add(i1);
-				}
-				
-				for(Individual i : modified) {
-					printStatsIndividual(i);
-					replace(i, index);
-				}
+//				for(int i = 0; i < Parameters.applyMoveOperator; i++) {
+//					Parameters.mutationRateMax = Parameters.WOMENS_TRANSITION_N / Parameters.applyMoveOperator * (i + 1);//setting mutation rate 4-8-12-16-20
+//					Individual i1 = population.get(index).copy();
+//					moveOperatorMutate(i1);
+//					i1.evaluate(teamPursuit);
+//					modified.add(i1);
+//				}
+//				
+//				for(Individual i : modified) {
+//					printStatsIndividual(i);
+//					replace(i, index);
+//				}
 				
 				
 				//Individual best = getBest(population);
@@ -235,6 +243,20 @@ public class EA implements Runnable{
 			System.out.println("replaced"); 
 			population.set(index, child);
 		}
+		else {
+			//accept worse solution with some probability
+			double diffFitness = child.getFitness() - population.get(index).getFitness();
+			double rnd = Parameters.rnd.nextDouble();
+			double prob = Math.exp(- Math.abs(diffFitness) / Parameters.currentTemp);
+			if(prob > rnd) {
+				System.out.println("up");
+				population.set(index, child);
+			}
+		}
+		
+		Parameters.currentTemp *= Parameters.coolingRate; //reduce geometrically
+//		Parameters.currentTemp = Parameters.currentTemp / (1 + (1 - Parameters.coolingRate) * Parameters.currentTemp); //reduce Lundy&Mees 	
+		System.out.println("temp: " + Parameters.currentTemp);
 	}
 
 	private Individual getRandomIndividual() {
@@ -248,8 +270,8 @@ public class EA implements Runnable{
 
 	private Individual mutate(Individual child) {
 		
-		// choose how many elements to alter - static. not using randomness here
-		int mutationRate = Parameters.mutationRateMax;
+		// choose how many elements to alter
+		int mutationRate = Parameters.rnd.nextInt(Parameters.mutationRateMax);
 		
 		// mutate the transition strategy
 
