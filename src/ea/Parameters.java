@@ -19,7 +19,7 @@ public class Parameters {
 	public static int tournamentSize = 2;
 	
 	public static int mutationRateMax = 20;//out of len
-	public static double mutationProbability = 0.6;
+	public static double mutationProbability = 0.5;
 	public static double crossoverProbability = 1.0;
 	
 	public static int maxIterations = 100;

@@ -63,7 +63,7 @@ public class EA implements Runnable{
 	public void run() {
 		
 		//int successrounds = 0;
-		Parameters.maxIterations = 500;
+		Parameters.maxIterations = 1000;
 		//for(int outerIteration = 0; outerIteration < 25; outerIteration++) {
 			initialisePopulation();	
 			iteration = 0;
@@ -77,13 +77,14 @@ public class EA implements Runnable{
 				Individual child = crossover(parent1, parent2);
 				child = mutate(child);
 				child.evaluate(teamPursuit);
-				
+				getStdDevPop();
 				replace(child);
-				//printNumNoFinished();
+				printNumNoFinished();
 				//Individual best = getBest(population);
 				//best.print();
-				//printStatsPopulation();
-//				
+				printStatsPopulation();
+				printStdDevPop();
+				
 			//}
 			
 			
@@ -98,6 +99,48 @@ public class EA implements Runnable{
 	}
 
 	//Debug functions
+	private void printPacingPop() {
+		for(Individual i : population) {
+			for(int index = 0; index < i.pacingStrategy.length; index++)
+				System.out.print(i.pacingStrategy[index] + " ");
+			System.out.print("\n");
+		}
+		
+	}
+	private void printStdDevPop() {
+		double stddev = getStdDevPop();
+		System.out.println("stddev pop pacing: " + stddev);
+	}
+	
+	private double getStdDevPop() {
+		double stddev = 0.0;
+		double mean = 0.0;
+		for(Individual i : population) {
+			for(int index = 0; index < i.pacingStrategy.length; index++) {
+				mean += i.pacingStrategy[index];
+			}
+		}
+		mean /= (population.get(0).pacingStrategy.length * population.size());
+		
+		for(Individual i : population) {
+			double mean_i = 0.0; //mean for individuals
+			double stddev_i = 0.0;
+			for(int index = 0; index < i.pacingStrategy.length; index++) {
+				mean_i += i.pacingStrategy[index];
+				
+			}
+			mean_i /= i.pacingStrategy.length;
+			stddev += Math.pow((mean_i - mean), 2);
+			
+		}
+		stddev /= population.size();
+		stddev = Math.sqrt(stddev);
+		
+		return stddev;
+	}
+		
+		
+	
 	
 	
 	private void printBestStats() {
@@ -136,7 +179,7 @@ public class EA implements Runnable{
 //		for(Individual i : population) {
 //			System.out.println("completed%: " + i.result.getProportionCompleted() + "\t energy: " + i.result.getEnergyRemaining());
 //		}
-		System.out.println("lowfitnessNum: " + getLowFitnessNumPopulation() + "\t meanFit: " + getMeanFitness() + "\t stddev: " + getStdDevFitness());
+		System.out.println("meanFit: " + getMeanFitness() + "\t stddev: " + getStdDevFitness());
 	}
 	/**
 	 * Print the proportion completed for the whole population
@@ -185,7 +228,7 @@ public class EA implements Runnable{
 		Individual worst = getWorst(population);
 		if(child.getFitness() < worst.getFitness()){
 			int idx = population.indexOf(worst);
-			//System.out.println("replaced worst: " + idx); 
+			System.out.println("replaced worst: " + idx); 
 			population.set(idx, child);
 		}
 	}
