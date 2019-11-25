@@ -90,7 +90,8 @@ public class Individual {
 		}
 		return str;
 	}
-
+	
+	
 	public void print() {
 		for(int i : pacingStrategy){
 			System.out.print(i + ",");			

@@ -74,17 +74,17 @@ public class EA implements Runnable{
 				iteration++;
 				//Individual parent1 = tournamentSelection();
 				//Individual parent2 = tournamentSelection();
-				Individual parent1 = selectionFitnessProportionate();
-				Individual parent2 = selectionFitnessProportionate();
+				Individual parent1 = selectionRanking();
+				Individual parent2 = selectionRanking();
 				Individual child = crossoverUniform(parent1, parent2);
 				child = mutate(child);
 				child.evaluate(teamPursuit);
 				
 				replace(child);
 				//printNumNoFinished();
-				//Individual best = getBest(population);
-				//best.print();
-				//printStatsPopulation();
+				Individual best = getBest(population);
+				best.print();
+				printStatsPopulation();
 				//printStdDevPop();
 //				
 			//}
@@ -323,19 +323,63 @@ public class EA implements Runnable{
 		return getBest(candidates).copy();
 	}
 	
+	private int[] getRankingByFitness(ArrayList<Individual> aPopulation) { //very slow
+		//rank fitnesses
+		int[] ranks = new int[aPopulation.size()];
+		ArrayList<Individual> pop = new ArrayList<Individual>(aPopulation.size());
+		//create copy of list that will be modified
+		for(int index = 0; index < aPopulation.size(); index++) {
+			pop.add(aPopulation.get(index).copy());
+		}
+				
+		for(int index = aPopulation.size() - 1; index > 0; index--) {
+			int bestIndex = getBestIndex(pop);
+			ranks[bestIndex] = index;
+			pop.set(bestIndex, null);
+		}
+		
+//		for(int i = 0; i < aPopulation.size(); i++) { //in case two 
+//			int count = 0;
+//			for(int j = 0; j < aPopulation.size(); j++) {
+//				if(aPopulation.get(i).getFitness() > aPopulation.get(i).getFitness())
+//					count++;
+//			}
+//			ranks[i] = count;
+//		}
+		return ranks;
+	}
+	
+	private Individual selectionRanking() {
+		int[] ranks = getRankingByFitness(population);
+		double[] probabilities = new double[population.size()];
+		for(int i = 0; i < population.size(); i ++)		
+			probabilities[i] = (2 - Parameters.scalingFactorRankingSelection) / population.size() + 
+			(2 * ranks[i] * (Parameters.scalingFactorRankingSelection - 1) / (population.size() * (population.size() - 1)));
+		
+		double rnd = Parameters.rnd.nextDouble();
+		
+		double partial_sum = 0;
+    	int parent_id = 0;
+ 
+    	while(rnd > partial_sum) {
+    		partial_sum += probabilities[parent_id];
+    		parent_id += 1;
+    	}
+    	parent_id -= 1; //have to get lower parent
+    	Individual selected = population.get(parent_id).copy();
+    	
+    	return selected;
+	}
+	
 	private Individual selectionFitnessProportionate() {
 		double absoluteFitness = getAbsoluteFitness();
 		
 		double partial_sum = 0;
     	int parent_id = 0;
     	double random_fitness = Parameters.rnd.nextDouble() * absoluteFitness;
-    	System.out.println(random_fitness);
-    	
-    	
+    	    	
     	while(random_fitness > partial_sum) {
     		partial_sum += population.get(parent_id).getFitness();
-//    		System.out.println("fitness chromosome: " + population.get(parent_id).getFitness());
-//    		System.out.println("partial sum: " + partial_sum);
     		parent_id += 1;
     	}
     	parent_id -= 1; //have to get lower parent
@@ -343,7 +387,19 @@ public class EA implements Runnable{
     	return selected;
 	}
 
-
+	private int getBestIndex(ArrayList<Individual> aPopulation) {
+		double bestFitness = Double.MAX_VALUE;
+		int idx = 0;
+		for(int index = 0; index < aPopulation.size(); index++){
+			if(aPopulation.get(index) != null && aPopulation.get(index).getFitness() < bestFitness) {
+				bestFitness = aPopulation.get(index).getFitness();
+				idx = index;
+			}
+		}
+		//System.out.println("best idx: " + idx);
+		return idx;
+	}
+	
 	private Individual getBest(ArrayList<Individual> aPopulation) {
 		double bestFitness = Double.MAX_VALUE;
 		Individual best = null;
@@ -355,7 +411,7 @@ public class EA implements Runnable{
 				idx++;
 			}
 		}
-		//System.out.println("best idx: " + idx);
+		System.out.println("best idx: " + idx);
 		return best;
 	}
 
