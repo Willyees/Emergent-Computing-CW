@@ -72,8 +72,10 @@ public class EA implements Runnable{
 			while(iteration < Parameters.maxIterations){
 				
 				iteration++;
-				Individual parent1 = tournamentSelection();
-				Individual parent2 = tournamentSelection();
+				//Individual parent1 = tournamentSelection();
+				//Individual parent2 = tournamentSelection();
+				Individual parent1 = selectionFitnessProportionate();
+				Individual parent2 = selectionFitnessProportionate();
 				Individual child = crossoverUniform(parent1, parent2);
 				child = mutate(child);
 				child.evaluate(teamPursuit);
@@ -82,8 +84,8 @@ public class EA implements Runnable{
 				//printNumNoFinished();
 				//Individual best = getBest(population);
 				//best.print();
-				printStatsPopulation();
-				printStdDevPop();
+				//printStatsPopulation();
+				//printStdDevPop();
 //				
 			//}
 			
@@ -213,6 +215,15 @@ public class EA implements Runnable{
 	
 	//End Debug functions
 	
+	//get absolute fitness of the population
+	private double getAbsoluteFitness() {
+		double totalFitness = 0.0;
+		for(Individual i : population) {
+			totalFitness += i.getFitness();
+		}
+		return totalFitness;		
+	}
+	
 	private void replace(Individual child) {
 		Individual worst = getWorst(population);
 		if(child.getFitness() < worst.getFitness()){
@@ -310,6 +321,26 @@ public class EA implements Runnable{
 			candidates.add(population.get(Parameters.rnd.nextInt(population.size())));
 		}
 		return getBest(candidates).copy();
+	}
+	
+	private Individual selectionFitnessProportionate() {
+		double absoluteFitness = getAbsoluteFitness();
+		
+		double partial_sum = 0;
+    	int parent_id = 0;
+    	double random_fitness = Parameters.rnd.nextDouble() * absoluteFitness;
+    	System.out.println(random_fitness);
+    	
+    	
+    	while(random_fitness > partial_sum) {
+    		partial_sum += population.get(parent_id).getFitness();
+//    		System.out.println("fitness chromosome: " + population.get(parent_id).getFitness());
+//    		System.out.println("partial sum: " + partial_sum);
+    		parent_id += 1;
+    	}
+    	parent_id -= 1; //have to get lower parent
+    	Individual selected = population.get(parent_id).copy();
+    	return selected;
 	}
 
 
