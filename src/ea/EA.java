@@ -74,7 +74,7 @@ public class EA implements Runnable{
 				iteration++;
 				Individual parent1 = tournamentSelection();
 				Individual parent2 = tournamentSelection();
-				Individual child = crossover(parent1, parent2);
+				Individual child = crossoverUniform(parent1, parent2);
 				child = mutate(child);
 				child.evaluate(teamPursuit);
 				
@@ -82,7 +82,8 @@ public class EA implements Runnable{
 				//printNumNoFinished();
 				//Individual best = getBest(population);
 				//best.print();
-				//printStatsPopulation();
+				printStatsPopulation();
+				printStdDevPop();
 //				
 			//}
 			
@@ -99,6 +100,37 @@ public class EA implements Runnable{
 
 	//Debug functions
 	
+	private void printStdDevPop() {
+		double stddev = getStdDevPop();
+		System.out.println("stddev pop pacing: " + stddev);
+	}
+	
+	private double getStdDevPop() {
+		double stddev = 0.0;
+		double mean = 0.0;
+		for(Individual i : population) {
+			for(int index = 0; index < i.pacingStrategy.length; index++) {
+				mean += i.pacingStrategy[index];
+			}
+		}
+		mean /= (population.get(0).pacingStrategy.length * population.size());
+		
+		for(Individual i : population) {
+			double mean_i = 0.0; //mean for individuals
+			double stddev_i = 0.0;
+			for(int index = 0; index < i.pacingStrategy.length; index++) {
+				mean_i += i.pacingStrategy[index];
+				
+			}
+			mean_i /= i.pacingStrategy.length;
+			stddev += Math.pow((mean_i - mean), 2);
+			
+		}
+		stddev /= population.size();
+		stddev = Math.sqrt(stddev);
+		
+		return stddev;
+	}
 	
 	private void printBestStats() {
 		Individual best = getBest(population);
@@ -197,7 +229,7 @@ public class EA implements Runnable{
 		}
 		
 		// choose how many elements to alter
-		int mutationRate = 1 + Parameters.rnd.nextInt(Parameters.mutationRateMax);
+		int mutationRate = Parameters.rnd.nextInt(Parameters.mutationRateMax) + 1;
 		
 		// mutate the transition strategy
 
@@ -216,15 +248,37 @@ public class EA implements Runnable{
 		return child;
 	}
 
-
+	private Individual crossoverUniform(Individual parent1, Individual parent2) { //have to use array of parents in case multiple parents are used
+		Individual child = new Individual();
+				
+		//pacing
+		for(int i = 0; i < parent1.pacingStrategy.length; i++) {
+			int rnd = Parameters.rnd.nextInt(Parameters.parentsN);
+			if(rnd == 0) {
+				child.pacingStrategy[i] = parent1.pacingStrategy[i];
+			}else if(rnd == 1) {
+				child.pacingStrategy[i] = parent2.pacingStrategy[i];
+			}
+		}
+		
+		//transition strategy
+		for(int i = 0; i < parent1.transitionStrategy.length; i++) {
+			int rnd = Parameters.rnd.nextInt(Parameters.parentsN);
+			if(rnd == 0) {
+				child.transitionStrategy[i] = parent1.transitionStrategy[i];
+			}else if(rnd == 1) {
+				child.transitionStrategy[i] = parent2.transitionStrategy[i];
+			}
+		}
+		return child;
+	}
+	
 	private Individual crossover(Individual parent1, Individual parent2) {
 		if(Parameters.rnd.nextDouble() > Parameters.crossoverProbability){
 			return parent1;
 		}
 		Individual child = new Individual();
-		
-		
-		
+				
 		//pacing strategy
 		int crossoverPointPacing = Parameters.rnd.nextInt(parent1.pacingStrategy.length);
 		for(int i = 0; i < crossoverPointPacing; i++){
