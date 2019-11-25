@@ -12,7 +12,7 @@ public class Parameters {
 	 */	
 	static final boolean [] DEFAULT_WOMENS_TRANSITION_STRATEGY = {true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true};
 	public static final int [] DEFAULT_WOMENS_PACING_STRATEGY = {300, 300, 300, 300, 300, 300, 300, 350, 350, 300, 300, 350, 350, 350, 350, 300, 300, 350, 350, 350, 350, 300, 300};
-	static final int WOMENS_PACING_STRATEGY_RANGE [] = {200,600}; //min: 200; max: 1200
+	static final int WOMENS_PACING_STRATEGY_RANGE [] = {200,500}; //min: 200; max: 1200
 	static final int WOMENS_PACING_STRATEGY_RANGE_MUTATION [] = {200,1200}; //min: 200; max: 1200
 	static final int WOMENS_TRANSITION_N = 21; 
 	public static int popSize = 1;
@@ -30,6 +30,7 @@ public class Parameters {
 	public final static double startTemp = 400.0;
 	public final static double finalTemp = 0.0;
 	public static double currentTemp = startTemp;
+	public static double reheatTemp = 100.0;
 	//DEBUG
 	public static double lowFitness = 1000.0;
 	

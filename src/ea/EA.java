@@ -64,12 +64,14 @@ public class EA implements Runnable{
 	}
 	public void run() {
 		//int successrounds = 0;
-		Parameters.maxIterations = 1000;
+		Parameters.maxIterations = 12000;
 		//for(int outerIteration = 0; outerIteration < 25; outerIteration++) {
 			initialisePopulation();	
-			
+			double bestOverallTime = Double.POSITIVE_INFINITY;
+			Individual bestOverall = new Individual();
 			iteration = 0;
 			int counterPreviousChrom = 0;
+			int counterInner = 0;
 			ArrayList<Individual> modified = new ArrayList<Individual>(Parameters.applyMoveOperator);
 			int index = 0;
 			while(iteration < Parameters.maxIterations && Parameters.currentTemp > Parameters.finalTemp){
@@ -79,11 +81,27 @@ public class EA implements Runnable{
 				//int index = getRandomIndividualIndex(); //not using because only 1 chormosome in the population
 				
 				Individual i1 = population.get(index).copy();
+				double previousFitness = population.get(index).getFitness();
 				moveOperatorMutate(i1);
 				i1.evaluate(teamPursuit);
 				replace(i1, index);
 				
-				//population.get(index).evaluate(teamPursuit);
+				if(previousFitness == population.get(index).getFitness()) { //most likely same chromosome as before since the fitness didnt change 
+					counterPreviousChrom++;
+				}
+				else
+					counterPreviousChrom = 0;
+				if(counterPreviousChrom == 400) { //same chromosome for 100 iterations
+					Parameters.currentTemp = Parameters.reheatTemp * 0.6;
+					Parameters.reheatTemp = Parameters.currentTemp;
+					counterInner++;
+					counterPreviousChrom = 0;
+				}
+				if(population.get(index).getFitness() < bestOverallTime ) {
+					bestOverall = population.get(index).copy();
+					bestOverallTime = bestOverall.getFitness();
+				}
+//				population.get(index).evaluate(teamPursuit);
 //				for(int i = 0; i < Parameters.applyMoveOperator; i++) {
 //					Parameters.mutationRateMax = Parameters.WOMENS_TRANSITION_N / Parameters.applyMoveOperator * (i + 1);//setting mutation rate 4-8-12-16-20
 //					Individual i1 = population.get(index).copy();
@@ -106,6 +124,8 @@ public class EA implements Runnable{
 			Individual best = getBest(population);
 			best.print();
 			printBestStatsEnergy(best);		
+			System.out.println("times temp up: " + counterInner);
+			printStatsIndividual(bestOverall);
 //		System.out.println("Success rounds: " + successrounds);
 	}
 
@@ -192,7 +212,7 @@ public class EA implements Runnable{
 //		for(Individual i : population) {
 //			System.out.println("completed%: " + i.result.getProportionCompleted() + "\t energy: " + i.result.getEnergyRemaining());
 //		}
-		System.out.println("meanFit: " + getMeanFitness() + "\t stddev: " + getStdDevFitness());
+		System.out.println("meanFit: " + getMeanFitness()); //+ "\t stddev: " + getStdDevFitness());
 	}
 	/**
 	 * Print the proportion completed for the whole population
@@ -271,18 +291,18 @@ public class EA implements Runnable{
 	private Individual mutate(Individual child) {
 		
 		// choose how many elements to alter
-		int mutationRate = Parameters.rnd.nextInt(Parameters.mutationRateMax);
+		int mutationN = Parameters.rnd.nextInt(Parameters.mutationRateMax) + 1;
 		
 		// mutate the transition strategy
 
 		//mutate the transition strategy by flipping boolean value
-		for(int i = 0; i < mutationRate; i++){
+		for(int i = 0; i < mutationN; i++){
 			int index = Parameters.rnd.nextInt(child.transitionStrategy.length);
 			child.transitionStrategy[index] = !child.transitionStrategy[index];
 		}
 			
 		//mutate the pacing strategy
-		for(int i = 0; i < mutationRate; i++) {
+		for(int i = 0; i < mutationN; i++) {
 			int index = Parameters.rnd.nextInt(child.pacingStrategy.length);
 			child.pacingStrategy[index] = Parameters.rnd.nextInt(Parameters.WOMENS_PACING_STRATEGY_RANGE_MUTATION[1] - Parameters.WOMENS_PACING_STRATEGY_RANGE_MUTATION[0] + 1)  + Parameters.WOMENS_PACING_STRATEGY_RANGE_MUTATION[0];
 		}
