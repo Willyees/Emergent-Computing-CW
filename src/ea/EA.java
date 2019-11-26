@@ -15,8 +15,9 @@ package ea;
  * The idea is to minimise the fitness value
  */
 
-
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 
 import teamPursuit.SimulationResult;
 import teamPursuit.TeamPursuit;
@@ -61,14 +62,11 @@ public class EA implements Runnable{
 		
 	}
 	public void run() {
-		
 		//int successrounds = 0;
 		Parameters.maxIterations = 500;
 		//for(int outerIteration = 0; outerIteration < 25; outerIteration++) {
 			initialisePopulation();	
 			iteration = 0;
-			
-			
 			while(iteration < Parameters.maxIterations){
 				
 				iteration++;
@@ -76,7 +74,11 @@ public class EA implements Runnable{
 				//Individual parent2 = tournamentSelection();
 				Individual parent1 = selectionRanking();
 				Individual parent2 = selectionRanking();
-				Individual child = crossoverUniform(parent1, parent2);
+				Individual parent3 = selectionRanking();
+				ArrayList<Individual> parents = new ArrayList<Individual>();
+				parents.add(parent1);parents.add(parent2);parents.add(parent3);
+				Individual child = crossover_NPoints(parents, 5);
+				//Individual child = crossoverUniform(parent1, parent2);
 				child = mutate(child);
 				child.evaluate(teamPursuit);
 				
@@ -311,6 +313,63 @@ public class EA implements Runnable{
 	}
 
 
+	private Individual crossover_NPoints(ArrayList<Individual> parents, int nPoints) {
+		if(Parameters.rnd.nextDouble() > Parameters.crossoverProbability){
+			return parents.get(0);
+		}
+		Individual child = new Individual();
+		//pacing
+		int pacingLength = parents.get(0).pacingStrategy.length;
+		ArrayList<Integer> points = new ArrayList<Integer>(nPoints);
+		for(int i = 0; i < nPoints; i++)
+			points.add(Parameters.rnd.nextInt(pacingLength));
+		Collections.sort(points);
+		//first cut and last cut done outside the main loop
+		int parent_id = 0;
+		for(int i = 0; i < points.get(0); i++)
+			child.pacingStrategy[i] = parents.get(parent_id).pacingStrategy[i];
+		parent_id++;
+		
+		for(int index = 0; index < points.size() - 1; index++) {
+			for(int i = points.get(index); i < points.get(index + 1); i++) {
+				child.pacingStrategy[i] = parents.get(parent_id).pacingStrategy[i];
+			}
+			parent_id++;
+			if(parent_id % parents.size() == 0)
+				parent_id = 0;
+		}
+		//last index
+		for(int i = points.get(points.size() - 1); i < pacingLength; i++){
+			child.pacingStrategy[i] = parents.get(parent_id).pacingStrategy[i];
+		}
+		
+		//transition
+		int transitionLength = parents.get(0).transitionStrategy.length;
+		points.clear();//might be better using same points because transition and pacing might be optimized one with the other
+		for(int i = 0; i < nPoints; i++)
+			points.add(Parameters.rnd.nextInt(transitionLength));
+		Collections.sort(points);
+		parent_id = 0;
+		for(int i = 0; i < points.get(0); i++)
+			child.transitionStrategy[i] = parents.get(parent_id).transitionStrategy[i];
+		parent_id++;
+		
+		for(int index = 0; index < points.size() - 1; index++) {
+			for(int i = points.get(index); i < points.get(index + 1); i++) {
+				child.transitionStrategy[i] = parents.get(parent_id).transitionStrategy[i];
+			}
+			parent_id++;
+			if(parent_id % parents.size() == 0)
+				parent_id = 0;
+		}
+		
+		//last index
+		for(int i = points.get(points.size() - 1); i < transitionLength; i++){
+			child.transitionStrategy[i] = parents.get(parent_id).transitionStrategy[i];
+		}
+		
+		return child;
+	}
 	/**
 	 * Returns a COPY of the individual selected using tournament selection
 	 * @return
