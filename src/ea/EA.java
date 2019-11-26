@@ -77,7 +77,7 @@ public class EA implements Runnable{
 				Individual parent3 = selectionRanking();
 				ArrayList<Individual> parents = new ArrayList<Individual>();
 				parents.add(parent1);parents.add(parent2);parents.add(parent3);
-				Individual child = crossover_NPoints(parents, 5);
+				Individual child = crossoverArithmetic(parents);
 				//Individual child = crossoverUniform(parent1, parent2);
 				child = mutate(child);
 				child.evaluate(teamPursuit);
@@ -313,7 +313,7 @@ public class EA implements Runnable{
 	}
 
 
-	private Individual crossover_NPoints(ArrayList<Individual> parents, int nPoints) {
+	private Individual crossoverNPoints(ArrayList<Individual> parents, int nPoints) {
 		if(Parameters.rnd.nextDouble() > Parameters.crossoverProbability){
 			return parents.get(0);
 		}
@@ -368,6 +368,35 @@ public class EA implements Runnable{
 			child.transitionStrategy[i] = parents.get(parent_id).transitionStrategy[i];
 		}
 		
+		return child;
+	}
+	
+	//outputting a child having its pacing strategy as a mean of its parents. transition strategy is uniform crossover
+	private Individual crossoverArithmetic(ArrayList<Individual> parents) {
+		Individual child = new Individual();
+		//transition strategy
+		int count_true = 0;
+		for(int i = 0; i < parents.get(0).transitionStrategy.length; i++) {
+			for(int index = 0; index < parents.size(); index++) {
+				if(parents.get(index).transitionStrategy[i] == true)
+					count_true++; 
+			}
+			if(count_true == parents.size() - count_true)
+				child.transitionStrategy[i] = Parameters.rnd.nextBoolean();
+			else
+				child.transitionStrategy[i] = (count_true >  (parents.size() - count_true)) ? true : false;
+			count_true = 0;
+		}
+		
+		//pacing strategy
+		double average = 0.0;
+		for(int i = 0; i < parents.get(0).pacingStrategy.length; i++) {
+			for(int index = 0; index < parents.size(); index++)
+				average += parents.get(index).pacingStrategy[i];
+			average /= parents.size();
+			child.pacingStrategy[i] = (int) average;
+			average = 0.0;
+		}
 		return child;
 	}
 	/**
