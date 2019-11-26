@@ -11,7 +11,7 @@ public class Parameters {
 	static final int WOMENS_PACING_STRATEGY_RANGE [] = {200,600}; //min: 200; max: 1200
 	static final int WOMENS_PACING_STRATEGY_RANGE_MUTATION [] = {200,1200}; //min: 200; max: 1200
 	
-	public static int popSize = 10;
+	public static int popSize = 20;
 	public static int tournamentSize = 2;
 	public static int parentsN = 2;
 	

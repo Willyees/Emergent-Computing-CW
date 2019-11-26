@@ -63,9 +63,9 @@ public class EA implements Runnable{
 	}
 	public void run() {
 		//int successrounds = 0;
-		Parameters.maxIterations = 1500;
+		Parameters.maxIterations = 500;
 		//for(int outerIteration = 0; outerIteration < 25; outerIteration++) {
-			initialisePopulation();	
+			initialisePopulation();
 			iteration = 0;
 			while(iteration < Parameters.maxIterations){
 				
@@ -82,7 +82,7 @@ public class EA implements Runnable{
 				child = mutateGaussian(child, 100.0);
 				child.evaluate(teamPursuit);
 				
-				replaceOldest(child);
+				replaceTournament(child, 3);
 				//printNumNoFinished();
 //				Individual best = getBest(population);
 //				best.print();
@@ -239,7 +239,15 @@ public class EA implements Runnable{
 	/**
 	 * replace oldest and add + 1 to age of all population 
 	 */
-	 
+	private void replaceTournament(Individual child, int tournmentSize) {
+		int[] indexes = new int[tournmentSize];
+		for(int i = 0; i < tournmentSize; i++)
+			indexes[i] = Parameters.rnd.nextInt(population.size());
+		int indexReplace = getWorstIndex(population, indexes);
+		
+		population.set(indexReplace, child);
+	}
+	
 	private void replaceOldest(Individual child) {
 //		if(population.size() < Parameters.popSize * 2) {
 //			population.add(child);
@@ -580,7 +588,35 @@ public class EA implements Runnable{
 		//System.out.println("best idx: " + idx);
 		return best;
 	}
-
+	
+	//requires parameters of indexes 
+	private int getWorstIndex(ArrayList<Individual> aPopulation, int[] rangeIndexes) {
+		double worstFitness = Double.MIN_VALUE;
+		int idx = 0;
+		for(int index : rangeIndexes) {
+			if(aPopulation.get(index) != null && aPopulation.get(index).getFitness() > worstFitness) {
+				worstFitness = aPopulation.get(index).getFitness();
+				idx = index;
+			}
+		}
+		
+		//System.out.println("best idx: " + idx);
+		return idx;
+	}
+	
+	private int getWorstIndex(ArrayList<Individual> aPopulation) {
+		double worstFitness = Double.MIN_VALUE;
+		int idx = 0;
+		for(int index = 0; index < aPopulation.size(); index++){
+			if(aPopulation.get(index) != null && aPopulation.get(index).getFitness() > worstFitness) {
+				worstFitness = aPopulation.get(index).getFitness();
+				idx = index;
+			}
+		}
+		//System.out.println("best idx: " + idx);
+		return idx;
+	}
+	
 	private Individual getWorst(ArrayList<Individual> aPopulation) {
 		double worstFitness = 0;
 		Individual worst = null;
