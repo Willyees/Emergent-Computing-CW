@@ -13,7 +13,7 @@ public class Parameters {
 	
 	public static int popSize = 20;
 	public static int tournamentSize = 2;
-	public static int parentsN = 2;
+	public final static int parentsN = 2;
 	
 	public static double scalingFactorRankingSelection = 1.5;
 	public static int mutationRateMax = 20;//out of len

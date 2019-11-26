@@ -67,6 +67,7 @@ public class EA implements Runnable{
 		//for(int outerIteration = 0; outerIteration < 25; outerIteration++) {
 			initialisePopulation();
 			iteration = 0;
+			
 			while(iteration < Parameters.maxIterations){
 				
 				iteration++;
@@ -88,12 +89,9 @@ public class EA implements Runnable{
 //				best.print();
 				printStatsPopulation();
 				printStdDevPop();
-//				
-			//}
+				if(iteration % 20 == 0)
+					replacePopulation(60);
 			
-			
-			//iteration = 0;
-//			
 		}			
 			Individual best = getBest(population);
 			best.print();
@@ -347,27 +345,20 @@ public class EA implements Runnable{
 		return child;
 	}
 
-	private Individual crossoverUniform(Individual parent1, Individual parent2) { //have to use array of parents in case multiple parents are used
+	private Individual crossoverUniform(ArrayList<Individual> parents) {
 		Individual child = new Individual();
 				
 		//pacing
-		for(int i = 0; i < parent1.pacingStrategy.length; i++) {
-			int rnd = Parameters.rnd.nextInt(Parameters.parentsN);
-			if(rnd == 0) {
-				child.pacingStrategy[i] = parent1.pacingStrategy[i];
-			}else if(rnd == 1) {
-				child.pacingStrategy[i] = parent2.pacingStrategy[i];
-			}
+		for(int i = 0; i < parents.get(0).pacingStrategy.length; i++) {
+			int rnd = Parameters.rnd.nextInt(parents.size());
+			child.pacingStrategy[i] = parents.get(rnd).pacingStrategy[i];
+
 		}
 		
 		//transition strategy
-		for(int i = 0; i < parent1.transitionStrategy.length; i++) {
-			int rnd = Parameters.rnd.nextInt(Parameters.parentsN);
-			if(rnd == 0) {
-				child.transitionStrategy[i] = parent1.transitionStrategy[i];
-			}else if(rnd == 1) {
-				child.transitionStrategy[i] = parent2.transitionStrategy[i];
-			}
+		for(int i = 0; i < parents.get(0).transitionStrategy.length; i++) {
+			int rnd = Parameters.rnd.nextInt(parents.size());
+			child.transitionStrategy[i] = parents.get(rnd).transitionStrategy[i];
 		}
 		return child;
 	}
@@ -649,4 +640,46 @@ public class EA implements Runnable{
 							
 		}		
 	}	
+	/**
+	 * 
+	 * @param randomP: 0-100 integer to specify the random part of parents from old population to use for new population
+	 */
+	private void replacePopulation(int randomP) {
+		//create pool parents. 60 random and 40 best parents
+		int popSize = population.size();
+		int randomN = (int) (popSize / 100.0 * randomP);
+		int bestN = popSize - randomN;
+		ArrayList<Individual> parents = new ArrayList<Individual>(popSize);
+		//random part
+		for(int i = 0; i < randomN; i++) {
+			parents.add(population.get(Parameters.rnd.nextInt(popSize)).copy());
+		}
+		//best ones
+		for(int i = 0; i < bestN; i++) {
+			int indexBest = getBestIndex(population);
+			parents.add(population.get(indexBest).copy());
+			population.remove(indexBest); //remove best index so second best can be found on next iteration
+		}
+		//
+		
+		
+		//create children
+		ArrayList<Individual> children = new ArrayList<Individual>(popSize);
+		for(int i = 0; i < popSize; i++) {
+			int[] indexParents = new int[Parameters.parentsN];
+			for(int j = 0; j < Parameters.parentsN; j++) {
+				indexParents[j] = Parameters.rnd.nextInt(parents.size());
+			}
+			Individual child = crossoverUniform(parents);
+			child = mutate(child);
+			child.evaluate(teamPursuit);
+			children.add(child);
+		}
+	
+		population.clear();
+		for(Individual c : children)
+			population.add(c.copy());
+		System.out.println("Replaced old population with new one, " + randomP + " % parents");
+		//replace original population
+	}
 }
