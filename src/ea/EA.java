@@ -63,7 +63,7 @@ public class EA implements Runnable{
 	}
 	public void run() {
 		//int successrounds = 0;
-		Parameters.maxIterations = 500;
+		Parameters.maxIterations = 1500;
 		//for(int outerIteration = 0; outerIteration < 25; outerIteration++) {
 			initialisePopulation();	
 			iteration = 0;
@@ -72,22 +72,22 @@ public class EA implements Runnable{
 				iteration++;
 				//Individual parent1 = tournamentSelection();
 				//Individual parent2 = tournamentSelection();
-				Individual parent1 = selectionRanking();
-				Individual parent2 = selectionRanking();
-				Individual parent3 = selectionRanking();
+				Individual parent1 = tournamentSelection();
+				Individual parent2 = tournamentSelection();
 				ArrayList<Individual> parents = new ArrayList<Individual>();
-				parents.add(parent1);parents.add(parent2);parents.add(parent3);
+				parents.add(parent1);parents.add(parent2);
 				Individual child = crossoverArithmetic(parents);
 				//Individual child = crossoverUniform(parent1, parent2);
-				child = mutate(child);
+				
+				child = mutateGaussian(child, 100.0);
 				child.evaluate(teamPursuit);
 				
-				replace(child);
+				replaceOldest(child);
 				//printNumNoFinished();
-				Individual best = getBest(population);
-				best.print();
+//				Individual best = getBest(population);
+//				best.print();
 				printStatsPopulation();
-				//printStdDevPop();
+				printStdDevPop();
 //				
 			//}
 			
@@ -226,7 +226,42 @@ public class EA implements Runnable{
 		return totalFitness;		
 	}
 	
-	private void replace(Individual child) {
+	//need index of the parents related to the population list.
+//	private void replaceRandomParent(ArrayList<Individual> parents, Individual child) {
+//		int indexReplace = Parameters.rnd.nextInt(parents.size());
+//		population.remove(parents.get(indexReplace))
+//	}
+	
+	private void replaceRandom(Individual child) {
+		int indexReplace = Parameters.rnd.nextInt(population.size());
+		population.set(indexReplace, child);
+	}
+	/**
+	 * replace oldest and add + 1 to age of all population 
+	 */
+	 
+	private void replaceOldest(Individual child) {
+//		if(population.size() < Parameters.popSize * 2) {
+//			population.add(child);
+//			return;
+//		}
+		int index_oldest = 0;
+		int age_oldest = -1;
+		for(int i = 0; i < population.size(); i++){
+			if(population.get(i).getAge() > age_oldest) {
+				age_oldest = population.get(i).getAge();
+				index_oldest = i;
+			}
+		}
+		System.out.println("replaced oldest: " + index_oldest + ". Age is: " + population.get(index_oldest).getAge());
+		population.set(index_oldest, child);
+		
+		//add +1 to age
+		for(Individual i : population) 
+			i.increaseAge();
+	}
+	
+	private void replaceWorst(Individual child) {
 		Individual worst = getWorst(population);
 		if(child.getFitness() < worst.getFitness()){
 			int idx = population.indexOf(worst);
@@ -235,25 +270,68 @@ public class EA implements Runnable{
 		}
 	}
 
-
+	//mutate with more chance on neighbour values (gaussian distribution). expecting mean
+	private Individual mutateGaussian(Individual child, double stddev, double mean) {
+		//pacing
+		int mutationN = Parameters.rnd.nextInt(Parameters.mutationRateMax) + 1;
+		for(int i = 0; i < mutationN; i++) {
+			int index = Parameters.rnd.nextInt();
+			int pacing = (int) (Parameters.rnd.nextGaussian() * stddev + mean);
+			if(pacing > Parameters.WOMENS_PACING_STRATEGY_RANGE_MUTATION[0] && pacing < Parameters.DEFAULT_WOMENS_PACING_STRATEGY[1])
+				child.pacingStrategy[index] = pacing;
+		}
+		
+		//transition
+		//mutate the transition strategy by flipping boolean value
+		for(int i = 0; i < mutationN; i++){
+			int index = Parameters.rnd.nextInt(child.transitionStrategy.length);
+			child.transitionStrategy[index] = !child.transitionStrategy[index];
+		}
+		
+		return child;
+	}
+	
+	//overloaded function. not using any mean, instead using the current value and searching around it.
+	private Individual mutateGaussian(Individual child, double stddev) {
+		//pacing
+		int mutationN = Parameters.rnd.nextInt(Parameters.mutationRateMax) + 1;
+		for(int i = 0; i < mutationN; i++) {
+			int mean = child.pacingStrategy[i];
+			int index = Parameters.rnd.nextInt(child.pacingStrategy.length);
+			int pacing = (int) (Parameters.rnd.nextGaussian() * stddev + mean);
+			if(pacing > Parameters.WOMENS_PACING_STRATEGY_RANGE_MUTATION[0] && pacing < Parameters.DEFAULT_WOMENS_PACING_STRATEGY[1])
+				child.pacingStrategy[index] = pacing;
+		}
+		
+		//transition
+		//mutate the transition strategy by flipping boolean value
+		for(int i = 0; i < mutationN; i++){
+			int index = Parameters.rnd.nextInt(child.transitionStrategy.length);
+			child.transitionStrategy[index] = !child.transitionStrategy[index];
+		}
+		
+		return child;
+	}
+	
+	
 	private Individual mutate(Individual child) {
 		if(Parameters.rnd.nextDouble() > Parameters.mutationProbability){
 			return child;
 		}
 		
 		// choose how many elements to alter
-		int mutationRate = Parameters.rnd.nextInt(Parameters.mutationRateMax) + 1;
+		int mutationN = Parameters.rnd.nextInt(Parameters.mutationRateMax) + 1;
 		
 		// mutate the transition strategy
 
 		//mutate the transition strategy by flipping boolean value
-		for(int i = 0; i < mutationRate; i++){
+		for(int i = 0; i < mutationN; i++){
 			int index = Parameters.rnd.nextInt(child.transitionStrategy.length);
 			child.transitionStrategy[index] = !child.transitionStrategy[index];
 		}
 			
 		//mutate the pacing strategy
-		for(int i = 0; i < mutationRate; i++) {
+		for(int i = 0; i < mutationN; i++) {
 			int index = Parameters.rnd.nextInt(child.pacingStrategy.length);
 			child.pacingStrategy[index] = Parameters.rnd.nextInt(Parameters.WOMENS_PACING_STRATEGY_RANGE_MUTATION[1] - Parameters.WOMENS_PACING_STRATEGY_RANGE_MUTATION[0] + 1)  + Parameters.WOMENS_PACING_STRATEGY_RANGE_MUTATION[0];
 		}
@@ -499,7 +577,7 @@ public class EA implements Runnable{
 				idx++;
 			}
 		}
-		System.out.println("best idx: " + idx);
+		//System.out.println("best idx: " + idx);
 		return best;
 	}
 
@@ -529,7 +607,7 @@ public class EA implements Runnable{
 		population.clear();
 		while(population.size() < Parameters.popSize){
 			Individual individual = new Individual();
-			individual.initialise();			
+			individual.initialise();		
 			individual.evaluate(teamPursuit);
 			population.add(individual);
 							
