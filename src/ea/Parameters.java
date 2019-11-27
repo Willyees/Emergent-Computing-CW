@@ -21,6 +21,7 @@ public class Parameters {
 	public static double crossoverProbability = 1.0;
 	
 	public static int maxIterations = 100;
+	public static double matingDistance = 500.0;
 	
 	//DEBUG
 	public static double lowFitness = 1000.0;

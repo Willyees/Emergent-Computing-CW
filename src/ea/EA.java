@@ -64,7 +64,7 @@ public class EA implements Runnable{
 	
 	public void run() {
 		//int successrounds = 0;
-		Parameters.maxIterations = 500;
+		Parameters.maxIterations = 100;
 		//for(int outerIteration = 0; outerIteration < 25; outerIteration++) {
 			initialisePopulation();
 			iteration = 0;
@@ -100,6 +100,11 @@ public class EA implements Runnable{
 
 	//Debug functions
 	
+	private void printPopulation() {
+		for(Individual i : population) {
+			i.print();
+		}
+	}
 	private void printStdDevPop() {
 		double stddev = getStdDevPop();
 		System.out.println("stddev pop pacing: " + stddev);
@@ -342,28 +347,50 @@ public class EA implements Runnable{
 		
 		return child;
 	}
+	
+	private double getEucledianD(int[] p1, int[] p2) {
+		if(p1.length != p2.length)
+			throw new IllegalStateException("the two vectors have different dimensions");
+		double distance = 0.0;
+		for(int i = 0; i < p1.length; i++) {
+			distance += Math.pow(p1[i] - p2[i], 2);
+		}
+		distance = Math.sqrt(distance);
+		return distance;
+	}
 
+	//this can be used to find similar chromosomes based on their fitness time
+	private double getDistance(double p1, double p2) {
+		return p1 - p2;
+	}
 	private ArrayList<Individual> getParents(int parentN){ //might use a optimized version of selection where there is no copy of parents from population (slow)
 		ArrayList<Individual> parents = new ArrayList<Individual>();
-		boolean parentDiffSpecies = true;
-		while(parentDiffSpecies) {
-			
-			Individual p = tournamentSelection();
-			parents.add(p);
-			int species = p.getSpecies();
-			for(int i = 0; i < parentN - 1; i++) { //one less because first is found outside the loop
-				p = tournamentSelection();
-				if(p.getSpecies() != species) {
-					parents.clear();
-					parentDiffSpecies = true;
-					System.out.println("parents have different species, no mating sorry");
+		boolean parentFound = false;
+		
+		Individual p = tournamentSelection();
+		parents.add(p);
+		
+		//check for similar parents
+		for(int i = 0; i < population.size(); i++) {
+			Individual p1 = tournamentSelection();
+			double distance = getEucledianD(p.pacingStrategy, p1.pacingStrategy);
+			if(distance < Parameters.matingDistance && distance != 0.0) {
+				System.out.println("Found similar");
+				parents.add(p1);
+				if(parents.size() == parentN) {
+					parentFound = true;
 					break;
 				}
-				parents.add(p);
-				parentDiffSpecies = false;
 			}
-			
 		}
+		//in case are not found, get remainings at random
+		if(!parentFound) {
+			for(int i = 0; i < parentN - parents.size(); i++) {
+				parents.add(tournamentSelection());
+			}
+		}
+			
+		
 		return parents;
 		
 	}
@@ -663,11 +690,6 @@ public class EA implements Runnable{
 		return worst;
 	}
 	
-	private void printPopulation() {
-		for(Individual individual : population){
-			System.out.println(individual);
-		}
-	}
 
 	private void initialisePopulation() {
 		System.out.println("cleared population");
