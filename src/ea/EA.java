@@ -28,6 +28,7 @@ public class EA implements Runnable{
 	// create a new team with the default settings
 	public static TeamPursuit teamPursuit = new WomensTeamPursuit(); 
 	
+	private ArrayList<ArrayList<Individual>> populations = new ArrayList<ArrayList<Individual>>();
 	private ArrayList<Individual> population = new ArrayList<Individual>();
 	private int iteration = 0;
 	
@@ -63,44 +64,94 @@ public class EA implements Runnable{
 	}
 	public void run() {
 		//int successrounds = 0;
-		Parameters.maxIterations = 1000;
+		Parameters.maxIterations = 500;
 		//for(int outerIteration = 0; outerIteration < 25; outerIteration++) {
+		for(int i = 0; i < Parameters.islandsN; i++)
 			initialisePopulation();
-			iteration = 0;
+		iteration = 0;
 			
-			while(iteration < Parameters.maxIterations){
-				
-				iteration++;
-				//Individual parent1 = tournamentSelection();
-				//Individual parent2 = tournamentSelection();
-				Individual parent1 = tournamentSelection();
-				Individual parent2 = tournamentSelection();
-				ArrayList<Individual> parents = new ArrayList<Individual>();
-				parents.add(parent1);parents.add(parent2);
-				Individual child = crossoverArithmetic(parents);
-				//Individual child = crossoverUniform(parent1, parent2);
-				
-				child = mutateGaussian(child, 100.0);
-				child.evaluate(teamPursuit);
-
-
-				replaceWorst(child);
-				printNumNoFinished();
-				//Individual best = getBest(population);
-				//best.print();
-				printStatsPopulation();
-				printStdDevPop();
+		while(iteration < Parameters.maxIterations * Parameters.islandsN){
+			for(int island = 0; island < Parameters.islandsN; island++) {
+				population = populations.get(island);
+				for(int i = 0 ; i < Parameters.swapIterations; i++) {
+					iteration++;
+					//Individual parent1 = tournamentSelection();
+					//Individual parent2 = tournamentSelection();
+					Individual parent1 = tournamentSelection();
+					Individual parent2 = tournamentSelection();
+					ArrayList<Individual> parents = new ArrayList<Individual>();
+					parents.add(parent1);parents.add(parent2);
+					Individual child = crossoverArithmetic(parents);
+					//Individual child = crossoverUniform(parent1, parent2);
+					
+					child = mutateGaussian(child, 100.0);
+					child.evaluate(teamPursuit);
+	
+					replaceWorst(child);
+					//printNumNoFinished();
+					//Individual best = getBest(population);
+					//best.print();
+					//printStatsPopulation();
+					//printStdDevPop();
+				}	
+			}
+			MoveIndividualsNextIslandRandom(populations);
 				
 			//}
 			
 		}			
-			Individual best = getBest(population);
+			Individual best = getBestIslands(populations);
 			best.print();
 			printBestStatsEnergy(best);
 //		
 //		System.out.println("Success rounds: " + successrounds);
 	}
 
+
+	/**
+	 * will move individuals to the next island according to the parameters set in the Parameters class.
+	 * Individuals are moved 1 by 1 for each island. So for each individual moved the population of the island in current focus will increase of 1 (moved individual can be selected again to be moved into next island)
+	 * Movin them randomly
+	 * @param islands
+	 */
+	private void MoveIndividualsNextIslandRandom(ArrayList<ArrayList<Individual>> islands) {
+		
+		//first island handled outside the loop
+		//ArrayList<Individual> swap = new ArrayList<Individual>(Parameters.swapIndividuals);
+ 		for(int i = 0; i < Parameters.swapIndividuals; i++) {
+			//add individuals from last island
+			int lastIslandIndex = Parameters.rnd.nextInt(islands.get(islands.size() - 1).size());//get random index from last island
+			islands.get(0).add(islands.get(islands.size() - 1).get(lastIslandIndex).copy());
+			islands.get(islands.size() - 1).remove(lastIslandIndex);
+		}
+ 		System.out.println("island0 pop:" + islands.get(0).size());
+ 		
+		//other islands
+		for(int island_index = 1; island_index < Parameters.islandsN; island_index++) {
+			//swap by random individuals
+			for(int i = 0; i < Parameters.swapIndividuals; i++) {
+				int rndIndex = Parameters.rnd.nextInt(islands.get(island_index - 1).size()); //ramdom individual from previous island
+				islands.get(island_index).add(islands.get(island_index - 1).get(rndIndex).copy()); //get previous random island individual
+				islands.get(island_index - 1).remove(rndIndex);
+			}
+	 		System.out.println("island" + island_index + " pop:" + islands.get(island_index).size());
+
+		}
+		
+		//DEBUG
+		for(int i = 0; i < Parameters.islandsN; i++) {
+			if(islands.get(i).size() != Parameters.popSize)
+				throw new IllegalArgumentException("wrong size island");
+		}
+//		//last done outside loop
+//		for(int i = 0; i < Parameters.swapIndividuals; i++) {
+//			int rndIndex = Parameters.rnd.nextInt(islands.get(0).size());
+//			swap[i] = rndIndex;
+//			
+//		}
+		
+	}
+	
 	//Debug functions
 	private void printPacingPop() {
 		for(Individual i : population) {
@@ -574,6 +625,22 @@ public class EA implements Runnable{
 		return idx;
 	}
 	
+	private Individual getBestIslands(ArrayList<ArrayList<Individual>> populations) {
+		double bestFitness = Double.MAX_VALUE;
+		Individual best = null;
+		int idx = 0;
+		for(ArrayList<Individual> aPopulation : populations){
+			for(Individual individual : aPopulation) {
+				if(individual.getFitness() < bestFitness || best == null){
+					best = individual;
+					bestFitness = best.getFitness();
+					idx++;
+				}
+			}
+		}
+		//System.out.println("best idx: " + idx);
+		return best;
+	}
 	private Individual getBest(ArrayList<Individual> aPopulation) {
 		double bestFitness = Double.MAX_VALUE;
 		Individual best = null;
@@ -639,15 +706,14 @@ public class EA implements Runnable{
 	}
 
 	private void initialisePopulation() {
-		System.out.println("cleared population");
-		population.clear();
+		ArrayList<Individual> population = new ArrayList<Individual>();
 		while(population.size() < Parameters.popSize){
 			Individual individual = new Individual();
 			individual.initialise();		
 			individual.evaluate(teamPursuit);
 			population.add(individual);
-							
 		}		
+		populations.add(population);
 	}	
 	/**
 	 * 
