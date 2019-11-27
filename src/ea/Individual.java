@@ -4,7 +4,7 @@ import teamPursuit.*;
 
 public class Individual {
 
-	
+	private int age = 0;
 	boolean[] transitionStrategy = new boolean[22] ;
 	int[] pacingStrategy = new int[23];
 	
@@ -67,8 +67,13 @@ public class Individual {
 				
 		return fitness;
 	}
-	
-	
+	//used for replacing oldest individuals
+	public int getAge() {
+		return this.age;
+	}
+	public void increaseAge() {
+		this.age++;
+	}
 	
 	public Individual copy(){
 		Individual individual = new Individual();
@@ -90,7 +95,8 @@ public class Individual {
 		}
 		return str;
 	}
-
+	
+	
 	public void print() {
 		for(int i : pacingStrategy){
 			System.out.print(i + ",");			
