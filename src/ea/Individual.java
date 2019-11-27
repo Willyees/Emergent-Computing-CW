@@ -3,7 +3,8 @@ package ea;
 import teamPursuit.*;
 
 public class Individual {
-
+	
+	private int species;
 	private int age = 0;
 	boolean[] transitionStrategy = new boolean[22] ;
 	int[] pacingStrategy = new int[23];
@@ -51,7 +52,19 @@ public class Individual {
 			result = teamPursuit.simulate(transitionStrategy, pacingStrategy);
 		} catch (Exception e) {
 			e.printStackTrace();
-		}		
+		}
+		setSpecies();
+	}
+	
+	public int getSpecies() {
+		return this.species;
+	}
+	
+	private void setSpecies() {
+		if(this.result.getProportionCompleted() < 0.999)
+			this.species = 0;
+		else
+			this.species = 1;
 	}
 	
 	public double getFitness(){

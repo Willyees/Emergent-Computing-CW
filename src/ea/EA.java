@@ -61,6 +61,7 @@ public class EA implements Runnable{
 		}
 		
 	}
+	
 	public void run() {
 		//int successrounds = 0;
 		Parameters.maxIterations = 500;
@@ -73,24 +74,21 @@ public class EA implements Runnable{
 				iteration++;
 				//Individual parent1 = tournamentSelection();
 				//Individual parent2 = tournamentSelection();
-				Individual parent1 = tournamentSelection();
-				Individual parent2 = tournamentSelection();
-				ArrayList<Individual> parents = new ArrayList<Individual>();
-				parents.add(parent1);parents.add(parent2);
+				ArrayList<Individual> parents = getParents(Parameters.parentsN);
 				Individual child = crossoverArithmetic(parents);
 				//Individual child = crossoverUniform(parent1, parent2);
 				
 				child = mutateGaussian(child, 100.0);
 				child.evaluate(teamPursuit);
 				
-				replaceTournament(child, 3);
+				replaceWorst(child);
 				//printNumNoFinished();
 //				Individual best = getBest(population);
 //				best.print();
 				printStatsPopulation();
 				printStdDevPop();
-				if(iteration % 20 == 0)
-					replacePopulation(60);
+//				if(iteration % 20 == 0)
+//					replacePopulation(60);
 			
 		}			
 			Individual best = getBest(population);
@@ -268,7 +266,7 @@ public class EA implements Runnable{
 	}
 	
 	private void replaceWorst(Individual child) {
-		Individual worst = getWorst(population);
+		Individual worst = getWorstSpecies(population, child.getSpecies());
 		if(child.getFitness() < worst.getFitness()){
 			int idx = population.indexOf(worst);
 			//System.out.println("replaced worst: " + idx); 
@@ -345,6 +343,31 @@ public class EA implements Runnable{
 		return child;
 	}
 
+	private ArrayList<Individual> getParents(int parentN){ //might use a optimized version of selection where there is no copy of parents from population (slow)
+		ArrayList<Individual> parents = new ArrayList<Individual>();
+		boolean parentDiffSpecies = true;
+		while(parentDiffSpecies) {
+			
+			Individual p = tournamentSelection();
+			parents.add(p);
+			int species = p.getSpecies();
+			for(int i = 0; i < parentN - 1; i++) { //one less because first is found outside the loop
+				p = tournamentSelection();
+				if(p.getSpecies() != species) {
+					parents.clear();
+					parentDiffSpecies = true;
+					System.out.println("parents have different species, no mating sorry");
+					break;
+				}
+				parents.add(p);
+				parentDiffSpecies = false;
+			}
+			
+		}
+		return parents;
+		
+	}
+	
 	private Individual crossoverUniform(ArrayList<Individual> parents) {
 		Individual child = new Individual();
 				
@@ -606,6 +629,23 @@ public class EA implements Runnable{
 		}
 		//System.out.println("best idx: " + idx);
 		return idx;
+	}
+	
+	private Individual getWorstSpecies(ArrayList<Individual> aPopulation, int species) {
+		double worstFitness = 0;
+		Individual worst = null;
+		int idx = 0;
+		for(Individual individual : population){
+			if((individual.getFitness() > worstFitness || worst == null) && individual.getSpecies() == species){
+				if(individual.getSpecies() != species)
+					throw new IllegalArgumentException("no");
+				worst = individual;
+				worstFitness = worst.getFitness();
+				idx++;
+			}
+		}
+		//System.out.println("worst: " + idx);
+		return worst;
 	}
 	
 	private Individual getWorst(ArrayList<Individual> aPopulation) {
