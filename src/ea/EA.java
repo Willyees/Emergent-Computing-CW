@@ -18,6 +18,9 @@ package ea;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Vector;
+
+//import com.sun.tools.classfile.StackMapTable_attribute.append_frame;
 
 import teamPursuit.SimulationResult;
 import teamPursuit.TeamPursuit;
@@ -63,7 +66,7 @@ public class EA implements Runnable{
 	}
 	public void run() {
 		//int successrounds = 0;
-		Parameters.maxIterations = 500;
+		Parameters.maxIterations = 1500;
 		//for(int outerIteration = 0; outerIteration < 25; outerIteration++) {
 			initialisePopulation();
 			iteration = 0;
@@ -80,7 +83,8 @@ public class EA implements Runnable{
 				Individual child = crossoverArithmetic(parents);
 				//Individual child = crossoverUniform(parent1, parent2);
 				
-				child = mutateGaussian(child, 100.0);
+				child = mutate(child);
+				
 				child.evaluate(teamPursuit);
 				
 				replaceTournament(child, 3);
@@ -89,8 +93,10 @@ public class EA implements Runnable{
 //				best.print();
 				printStatsPopulation();
 				printStdDevPop();
-				if(iteration % 20 == 0)
-					replacePopulation(60);
+				if(iteration % 150 == 0) {
+					replacePopulation(10);
+					//infusionReplace(Parameters.infusionN);
+				}
 			
 		}			
 			Individual best = getBest(population);
@@ -607,6 +613,30 @@ public class EA implements Runnable{
 		//System.out.println("best idx: " + idx);
 		return idx;
 	}
+	/**
+	 * get number of worst elements
+	 * @param aPopulation
+	 * @param n
+	 * @return
+	 */
+	private ArrayList<Integer> getWorstNIndexes(ArrayList<Individual> aPopulation, int n) {
+		//int[] worstIndexes = new int[n];
+		ArrayList<Integer> worstIndexes = new ArrayList<Integer>();
+		int worstIndex = -1;
+		double worst = Double.MIN_VALUE;
+		for(int times = 0; times < n; times++) {
+			for(int index = 0; index < aPopulation.size(); index++) {
+				if(!worstIndexes.contains(index) && aPopulation.get(index).getFitness() > worst) {
+					worst = aPopulation.get(index).getFitness();
+					worstIndex = index;
+				}
+			}
+			worstIndexes.add(worstIndex);
+			worst = Double.MIN_VALUE;
+		}
+		
+		return worstIndexes;
+	}
 	
 	private Individual getWorst(ArrayList<Individual> aPopulation) {
 		double worstFitness = 0;
@@ -640,6 +670,19 @@ public class EA implements Runnable{
 							
 		}		
 	}	
+	
+	//can replace random or worst
+	private void infusionReplace(int replaceN) {
+		ArrayList<Integer> indexesReplace = getWorstNIndexes(population, replaceN);
+		for(int i = 0; i < replaceN; i++) {
+			Individual c = new Individual();
+			c.initialise();
+			c.evaluate(teamPursuit);
+			population.set(indexesReplace.get(i), c);
+		}
+	}
+	
+	
 	/**
 	 * 
 	 * @param randomP: 0-100 integer to specify the random part of parents from old population to use for new population

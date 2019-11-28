@@ -12,15 +12,16 @@ public class Parameters {
 	static final int WOMENS_PACING_STRATEGY_RANGE_MUTATION [] = {200,1200}; //min: 200; max: 1200
 	
 	public static int popSize = 20;
-	public static int tournamentSize = 2;
+	public static int tournamentSize = 6;
 	public final static int parentsN = 2;
 	
 	public static double scalingFactorRankingSelection = 1.5;
-	public static int mutationRateMax = 20;//out of len
+	public static int mutationRateMax = 4;//out of len
 	public static double mutationProbability = 0.6;
 	public static double crossoverProbability = 1.0;
 	
 	public static int maxIterations = 100;
+	public static int infusionN = 5;
 	
 	//DEBUG
 	public static double lowFitness = 1000.0;
