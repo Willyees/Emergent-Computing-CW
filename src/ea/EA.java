@@ -84,9 +84,8 @@ public class EA implements Runnable{
 					Individual child = crossoverArithmetic(parents);
 					//Individual child = crossoverUniform(parent1, parent2);
 					
-					child = mutateGaussian(child, 100.0);
+					child = mutate(child);
 					child.evaluate(teamPursuit);
-	
 					replaceWorst(child);
 					//printNumNoFinished();
 					//Individual best = getBest(population);
@@ -95,7 +94,7 @@ public class EA implements Runnable{
 					//printStdDevPop();
 				}	
 			}
-			MoveIndividualsNextIslandRandom(populations);
+			MoveIndividualsNextIslandBest(populations);
 				
 			//}
 			
@@ -106,8 +105,31 @@ public class EA implements Runnable{
 //		
 //		System.out.println("Success rounds: " + successrounds);
 	}
+	/**
+	 * move individuals to next island based on their fitness. Once they are moved, they are removed from previous island
+	 * @param islands
+	 */
+	private void MoveIndividualsNextIslandBest(ArrayList<ArrayList<Individual>> islands) {
+		
+		for(int i = 0; i < Parameters.swapIndividuals; i++) {
+			//add individuals from last island
+			int bestIndex = getBestIndex(islands.get(islands.size() - 1));
+			islands.get(0).add(islands.get(islands.size() - 1).get(bestIndex).copy());
+			islands.get(islands.size() - 1).remove(bestIndex);
+		}
+		
+		for(int island_index = 1; island_index < Parameters.islandsN; island_index++) {
+			//swap by random individuals
+			for(int i = 0; i < Parameters.swapIndividuals; i++) {
+				int bestIndex = getBestIndex(islands.get(island_index - 1));
+				islands.get(island_index).add(islands.get(island_index - 1).get(bestIndex).copy()); //get previous random island individual
+				islands.get(island_index - 1).remove(bestIndex);
+			}
+	 		System.out.println("island" + island_index + " pop:" + islands.get(island_index).size());
 
-
+		}
+	}
+	
 	/**
 	 * will move individuals to the next island according to the parameters set in the Parameters class.
 	 * Individuals are moved 1 by 1 for each island. So for each individual moved the population of the island in current focus will increase of 1 (moved individual can be selected again to be moved into next island)
@@ -137,18 +159,6 @@ public class EA implements Runnable{
 	 		System.out.println("island" + island_index + " pop:" + islands.get(island_index).size());
 
 		}
-		
-		//DEBUG
-		for(int i = 0; i < Parameters.islandsN; i++) {
-			if(islands.get(i).size() != Parameters.popSize)
-				throw new IllegalArgumentException("wrong size island");
-		}
-//		//last done outside loop
-//		for(int i = 0; i < Parameters.swapIndividuals; i++) {
-//			int rndIndex = Parameters.rnd.nextInt(islands.get(0).size());
-//			swap[i] = rndIndex;
-//			
-//		}
 		
 	}
 	

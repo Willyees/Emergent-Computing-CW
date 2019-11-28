@@ -16,7 +16,7 @@ public class Parameters {
 	public static int tournamentSize = 2;
 	public final static int parentsN = 2;
 	public static int swapIndividuals = 5;
-	public static int swapIterations = 250;
+	public static int swapIterations = 150;
 	
 	public static double scalingFactorRankingSelection = 1.5;
 	public static int mutationRateMax = 4;//out of len
