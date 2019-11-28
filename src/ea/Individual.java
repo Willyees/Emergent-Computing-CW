@@ -49,16 +49,18 @@ public class Individual {
 	public void evaluate(TeamPursuit teamPursuit){		
 		try {
 			result = teamPursuit.simulate(transitionStrategy, pacingStrategy);
+			
 		} catch (Exception e) {
 			e.printStackTrace();
 		}		
 	}
 	
 	public double getFitness(){
-		double fitness = Parameters.lowFitness;		
+		double fitness = 1000;//Parameters.lowFitness;		
 		if (result == null || result.getProportionCompleted() < 0.999){
 			double additional = fitness * (0.999 - result.getProportionCompleted());
 			fitness += additional; 
+	
 		}
 		else{				
 			fitness = result.getFinishTime();

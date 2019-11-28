@@ -66,11 +66,11 @@ public class EA implements Runnable{
 	}
 	public void run() {
 		//int successrounds = 0;
-		Parameters.maxIterations = 1500;
+		Parameters.maxIterations = 1000;
 		//for(int outerIteration = 0; outerIteration < 25; outerIteration++) {
 			initialisePopulation();
 			iteration = 0;
-			
+			int iteration_same = 0;
 			while(iteration < Parameters.maxIterations){
 				
 				iteration++;
@@ -80,29 +80,31 @@ public class EA implements Runnable{
 				Individual parent2 = tournamentSelection();
 				ArrayList<Individual> parents = new ArrayList<Individual>();
 				parents.add(parent1);parents.add(parent2);
-				Individual child = crossoverArithmetic(parents);
+				Individual child = crossover(parent1, parent2);
 				//Individual child = crossoverUniform(parent1, parent2);
 				
 				child = mutate(child);
 				
 				child.evaluate(teamPursuit);
-				
-				replaceTournament(child, 3);
+				replaceTournament(child, 5);
 				//printNumNoFinished();
 //				Individual best = getBest(population);
 //				best.print();
 				printStatsPopulation();
 				printStdDevPop();
-				if(iteration % 150 == 0) {
-					replacePopulation(10);
-					//infusionReplace(Parameters.infusionN);
+				if(getStdDevFitness() == 0.0)
+					iteration_same++;
+				if(iteration_same == 50) {
+					//replacePopulation(20);
+					iteration_same = 0;
+					infusionReplace(Parameters.infusionN);
 				}
 			
 		}			
 			Individual best = getBest(population);
 			best.print();
 			printBestStatsEnergy(best);
-//		
+			printPopulation();
 //		System.out.println("Success rounds: " + successrounds);
 	}
 
@@ -240,9 +242,7 @@ public class EA implements Runnable{
 		int indexReplace = Parameters.rnd.nextInt(population.size());
 		population.set(indexReplace, child);
 	}
-	/**
-	 * replace oldest and add + 1 to age of all population 
-	 */
+
 	private void replaceTournament(Individual child, int tournmentSize) {
 		int[] indexes = new int[tournmentSize];
 		for(int i = 0; i < tournmentSize; i++)
@@ -252,6 +252,9 @@ public class EA implements Runnable{
 		population.set(indexReplace, child);
 	}
 	
+	/**
+	 * replace oldest and add + 1 to age of all population 
+	 */
 	private void replaceOldest(Individual child) {
 //		if(population.size() < Parameters.popSize * 2) {
 //			population.add(child);
@@ -275,9 +278,11 @@ public class EA implements Runnable{
 	
 	private void replaceWorst(Individual child) {
 		Individual worst = getWorst(population);
+		System.out.println("child: " + child.result.getProportionCompleted());
+		System.out.println(worst.result.getProportionCompleted());
 		if(child.getFitness() < worst.getFitness()){
 			int idx = population.indexOf(worst);
-			//System.out.println("replaced worst: " + idx); 
+			System.out.println("replaced worst: " + idx); 
 			population.set(idx, child);
 		}
 	}
@@ -333,7 +338,7 @@ public class EA implements Runnable{
 		
 		// choose how many elements to alter
 		int mutationN = Parameters.rnd.nextInt(Parameters.mutationRateMax) + 1;
-		
+		//System.out.println("mtueate: " + mutationN);
 		// mutate the transition strategy
 
 		//mutate the transition strategy by flipping boolean value
@@ -656,7 +661,9 @@ public class EA implements Runnable{
 	private void printPopulation() {
 		for(Individual individual : population){
 			System.out.println(individual);
+			printBestStatsEnergy(individual);
 		}
+		
 	}
 
 	private void initialisePopulation() {
@@ -688,7 +695,7 @@ public class EA implements Runnable{
 	 * @param randomP: 0-100 integer to specify the random part of parents from old population to use for new population
 	 */
 	private void replacePopulation(int randomP) {
-		//create pool parents. 60 random and 40 best parents
+		//create pool parents. randoP% random and (100 - randomP)% best parents
 		int popSize = population.size();
 		int randomN = (int) (popSize / 100.0 * randomP);
 		int bestN = popSize - randomN;
