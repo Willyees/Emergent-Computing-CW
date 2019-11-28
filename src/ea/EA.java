@@ -65,47 +65,50 @@ public class EA implements Runnable{
 		
 	}
 	public void run() {
-		//int successrounds = 0;
+		long timeInit = System.currentTimeMillis();
+		long timeEnd = timeInit + 300000;
 		Parameters.maxIterations = 1000;
-		//for(int outerIteration = 0; outerIteration < 25; outerIteration++) {
-			initialisePopulation();
-			iteration = 0;
-			int iteration_same = 0;
-			while(iteration < Parameters.maxIterations){
-				
-				iteration++;
-				//Individual parent1 = tournamentSelection();
-				//Individual parent2 = tournamentSelection();
-				Individual parent1 = tournamentSelection();
-				Individual parent2 = tournamentSelection();
-				ArrayList<Individual> parents = new ArrayList<Individual>();
-				parents.add(parent1);parents.add(parent2);
-				Individual child = crossover(parent1, parent2);
-				//Individual child = crossoverUniform(parent1, parent2);
-				
-				child = mutate(child);
-				
-				child.evaluate(teamPursuit);
-				replaceTournament(child, 5);
-				//printNumNoFinished();
-//				Individual best = getBest(population);
-//				best.print();
-				printStatsPopulation();
-				printStdDevPop();
-				if(getStdDevFitness() == 0.0)
-					iteration_same++;
-				if(iteration_same == 50) {
-					//replacePopulation(20);
-					iteration_same = 0;
-					infusionReplace(Parameters.infusionN);
-				}
+		Individual bestSoFar = new Individual();
+		double bestFitnessSoFar = Double.MAX_VALUE;
+		System.out.println("Intialized EA");
+		initialisePopulation();
+		iteration = 0;
+		int iteration_same = 0;
+		while(System.currentTimeMillis() < timeEnd){
 			
+			iteration++;
+			ArrayList<Individual> parents = new ArrayList<Individual>();
+			for(int pN = 0; pN < Parameters.parentsN; pN++) {
+				Individual parent = tournamentSelection();
+				parents.add(parent);
+			}
+			Individual child = crossoverNPoints(parents, 4);
+			child = mutate(child);			
+			child.evaluate(teamPursuit);
+			replaceWorst(child);
+			if(getStdDevPop() == 0.0)
+				iteration_same++;
+			else
+				iteration_same = 0;
+			if(iteration_same == 250) {
+				Individual best = getBest(population);
+				if(best.getFitness() < bestFitnessSoFar) {
+					bestSoFar = best.copy();
+					bestFitnessSoFar = bestSoFar.getFitness();
+				}
+				replacePopulation(20);
+				iteration_same = 0;
+				//infusionReplace(Parameters.infusionN);
+			}
+		
 		}			
-			Individual best = getBest(population);
-			best.print();
-			printBestStatsEnergy(best);
-			printPopulation();
-//		System.out.println("Success rounds: " + successrounds);
+		Individual best = getBest(population);
+		if(best.getFitness() > bestFitnessSoFar)
+			best = bestSoFar;
+		System.out.println("EA finished.\nBest:");
+		best.print();
+		printBestStatsEnergy(best);
+		//printPopulation();
 	}
 
 	//Debug functions
@@ -278,11 +281,11 @@ public class EA implements Runnable{
 	
 	private void replaceWorst(Individual child) {
 		Individual worst = getWorst(population);
-		System.out.println("child: " + child.result.getProportionCompleted());
-		System.out.println(worst.result.getProportionCompleted());
+		//System.out.println("child: " + child.result.getProportionCompleted());
+		//System.out.println(worst.result.getProportionCompleted());
 		if(child.getFitness() < worst.getFitness()){
 			int idx = population.indexOf(worst);
-			System.out.println("replaced worst: " + idx); 
+			//System.out.println("replaced worst: " + idx); 
 			population.set(idx, child);
 		}
 	}
@@ -310,6 +313,9 @@ public class EA implements Runnable{
 	
 	//overloaded function. not using any mean, instead using the current value and searching around it.
 	private Individual mutateGaussian(Individual child, double stddev) {
+		if(Parameters.rnd.nextDouble() > Parameters.mutationProbability){
+			return child;
+		}
 		//pacing
 		int mutationN = Parameters.rnd.nextInt(Parameters.mutationRateMax) + 1;
 		for(int i = 0; i < mutationN; i++) {
@@ -715,16 +721,18 @@ public class EA implements Runnable{
 		
 		//create children
 		ArrayList<Individual> children = new ArrayList<Individual>(popSize);
+		Parameters.mutationProbability = 1.0; //temporary setting the mutation up. Dont want to get same result from same parents again
 		for(int i = 0; i < popSize; i++) {
 			int[] indexParents = new int[Parameters.parentsN];
 			for(int j = 0; j < Parameters.parentsN; j++) {
 				indexParents[j] = Parameters.rnd.nextInt(parents.size());
 			}
 			Individual child = crossoverUniform(parents);
-			child = mutate(child);
+			child = mutateGaussian(child, 50.0); //small change
 			child.evaluate(teamPursuit);
 			children.add(child);
 		}
+		Parameters.mutationProbability = 0.6;
 	
 		population.clear();
 		for(Individual c : children)
