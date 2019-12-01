@@ -65,15 +65,14 @@ public class EA implements Runnable{
 		
 	}
 	public void run() {
-		Individual bestSoFar = new Individual();
-		double bestFitnessSoFar = Double.MAX_VALUE;
 		System.out.println("Intialized EA");
 		Parameters.maxIterations = 1000;
-		
-		for(int outerIteration = 0; outerIteration < 10; outerIteration++) {
+		for(int outerIteration = 0; outerIteration < 1; outerIteration++) {
+			Individual bestSoFar = new Individual();
+			double bestFitnessSoFar = Double.MAX_VALUE;
 			initialisePopulation();	
 			iteration = 0;
-			//int iteration_same = 0;
+			int iteration_same = 0;
 		while(iteration < Parameters.maxIterations){
 			
 			iteration++;
@@ -82,26 +81,39 @@ public class EA implements Runnable{
 				Individual parent = tournamentSelection();
 				parents.add(parent);
 			}
-			Individual child = crossoverNPoints(parents, 4);
+			Individual child = crossoverArithmetic(parents);
 			child.evaluate(teamPursuit);
-			child = mutate(child);			
+			child = mutate(child);
+			if(child.result.getProportionCompleted() < 0.999)
+				child = mutateLow(child);
+			else {
+				double g = Parameters.gaussianMutate / Math.pow(2, (int) iteration_same / 50);
+				//System.out.println(g);
+				child = mutateGaussian(child, g);
+				
+			}
 			child.evaluate(teamPursuit);
 			replaceWorst(child);
-//			if(getStdDevPop() == 0.0)
-//				iteration_same++;
-//			else
-//				iteration_same = 0;
-//			if(iteration_same == 250) {
-//				Individual best = getBest(population);
-//				if(best.getFitness() < bestFitnessSoFar) {
-//					bestSoFar = best.copy();
-//					bestFitnessSoFar = bestSoFar.getFitness();
-//				}
-//				replacePopulation(20);
-//				iteration_same = 0;
-				//infusionReplace(Parameters.infusionN);
-//			}
-		
+			if(getStdDevPop() == 0.0)
+				iteration_same++;
+			else
+				iteration_same = 0;
+			if(iteration % 50 == 0 && iteration_same < 15)
+				infusionReplace(Parameters.infusionN);
+			
+			if(iteration_same == 150) {
+				Individual best = getBest(population);
+				if(best.getFitness() < bestFitnessSoFar) {
+					bestSoFar = best.copy();
+					bestFitnessSoFar = bestSoFar.getFitness();
+				}
+				replacePopulation(20);
+				iteration_same = 0;
+				
+			}
+//			Individual best = getBest(population);
+//			System.out.println(best.getFitness());
+//			printStatsPopulation();
 		}			
 		Individual best = getBest(population);
 		if(best.getFitness() > bestFitnessSoFar)
@@ -111,6 +123,7 @@ public class EA implements Runnable{
 		printBestStatsEnergy(best);
 		//printPopulation();
 	}
+		
 	}
 	//Debug functions
 	
@@ -337,7 +350,27 @@ public class EA implements Runnable{
 		return child;
 	}
 	
-	
+	//used to muutate non-finishing groups
+	private Individual mutateLow(Individual child) { 
+		if(Parameters.rnd.nextDouble() > Parameters.mutationProbability){
+			return child;
+		}
+		int mutationN = Parameters.rnd.nextInt(Parameters.mutationRateMax) + 1;
+		//System.out.println("mtueate: " + mutationN);
+		// mutate the transition strategy
+
+		//mutate the transition strategy by flipping boolean value
+		for(int i = 0; i < mutationN; i++){
+			int index = Parameters.rnd.nextInt(child.transitionStrategy.length);
+			child.transitionStrategy[index] = !child.transitionStrategy[index];
+		}
+		
+		for(int i = 0; i < mutationN; i++) {
+			int index = Parameters.rnd.nextInt(child.pacingStrategy.length);
+			child.pacingStrategy[index] = Parameters.rnd.nextInt(child.pacingStrategy[index] - Parameters.WOMENS_PACING_STRATEGY_RANGE[0] + 1)  + Parameters.WOMENS_PACING_STRATEGY_RANGE[0];
+		}
+		return child;
+	}
 	private Individual mutate(Individual child) {
 		if(Parameters.rnd.nextDouble() > Parameters.mutationProbability){
 			return child;
