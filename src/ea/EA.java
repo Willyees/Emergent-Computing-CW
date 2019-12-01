@@ -65,16 +65,16 @@ public class EA implements Runnable{
 		
 	}
 	public void run() {
-		long timeInit = System.currentTimeMillis();
-		long timeEnd = timeInit + 300000;
-		Parameters.maxIterations = 1000;
 		Individual bestSoFar = new Individual();
 		double bestFitnessSoFar = Double.MAX_VALUE;
 		System.out.println("Intialized EA");
-		initialisePopulation();
-		iteration = 0;
-		int iteration_same = 0;
-		while(System.currentTimeMillis() < timeEnd){
+		Parameters.maxIterations = 1000;
+		
+		for(int outerIteration = 0; outerIteration < 10; outerIteration++) {
+			initialisePopulation();	
+			iteration = 0;
+			//int iteration_same = 0;
+		while(iteration < Parameters.maxIterations){
 			
 			iteration++;
 			ArrayList<Individual> parents = new ArrayList<Individual>();
@@ -83,23 +83,24 @@ public class EA implements Runnable{
 				parents.add(parent);
 			}
 			Individual child = crossoverNPoints(parents, 4);
+			child.evaluate(teamPursuit);
 			child = mutate(child);			
 			child.evaluate(teamPursuit);
 			replaceWorst(child);
-			if(getStdDevPop() == 0.0)
-				iteration_same++;
-			else
-				iteration_same = 0;
-			if(iteration_same == 250) {
-				Individual best = getBest(population);
-				if(best.getFitness() < bestFitnessSoFar) {
-					bestSoFar = best.copy();
-					bestFitnessSoFar = bestSoFar.getFitness();
-				}
-				replacePopulation(20);
-				iteration_same = 0;
+//			if(getStdDevPop() == 0.0)
+//				iteration_same++;
+//			else
+//				iteration_same = 0;
+//			if(iteration_same == 250) {
+//				Individual best = getBest(population);
+//				if(best.getFitness() < bestFitnessSoFar) {
+//					bestSoFar = best.copy();
+//					bestFitnessSoFar = bestSoFar.getFitness();
+//				}
+//				replacePopulation(20);
+//				iteration_same = 0;
 				//infusionReplace(Parameters.infusionN);
-			}
+//			}
 		
 		}			
 		Individual best = getBest(population);
@@ -110,7 +111,7 @@ public class EA implements Runnable{
 		printBestStatsEnergy(best);
 		//printPopulation();
 	}
-
+	}
 	//Debug functions
 	
 	private void printStdDevPop() {
@@ -341,7 +342,10 @@ public class EA implements Runnable{
 		if(Parameters.rnd.nextDouble() > Parameters.mutationProbability){
 			return child;
 		}
-		
+		if(Parameters.rnd.nextDouble() > Parameters.mutationProbability){
+			return child;
+		}
+		boolean lowFitness = (child.getFitness() > Parameters.lowFitness) ? true : false;
 		// choose how many elements to alter
 		int mutationN = Parameters.rnd.nextInt(Parameters.mutationRateMax) + 1;
 		//System.out.println("mtueate: " + mutationN);
@@ -356,7 +360,10 @@ public class EA implements Runnable{
 		//mutate the pacing strategy
 		for(int i = 0; i < mutationN; i++) {
 			int index = Parameters.rnd.nextInt(child.pacingStrategy.length);
-			child.pacingStrategy[index] = Parameters.rnd.nextInt(Parameters.WOMENS_PACING_STRATEGY_RANGE_MUTATION[1] - Parameters.WOMENS_PACING_STRATEGY_RANGE_MUTATION[0] + 1)  + Parameters.WOMENS_PACING_STRATEGY_RANGE_MUTATION[0];
+			if(lowFitness)//if didnt finish, try to lower the energy used
+				child.pacingStrategy[index] = Parameters.rnd.nextInt(child.pacingStrategy[index] - Parameters.WOMENS_PACING_STRATEGY_RANGE[0] + 1)  + Parameters.WOMENS_PACING_STRATEGY_RANGE[0];
+			else
+				child.pacingStrategy[index] = Parameters.rnd.nextInt(Parameters.WOMENS_PACING_STRATEGY_RANGE_MUTATION[1] - Parameters.WOMENS_PACING_STRATEGY_RANGE_MUTATION[0] + 1)  + Parameters.WOMENS_PACING_STRATEGY_RANGE_MUTATION[0];
 		}
 		
 		return child;
@@ -396,7 +403,7 @@ public class EA implements Runnable{
 		}
 		
 		//transition strategy
-		int crossoverPointTransition = Parameters.rnd.nextInt(parent1.transitionStrategy.length);
+		int crossoverPointTransition = crossoverPointPacing;//Parameters.rnd.nextInt(parent1.transitionStrategy.length);
 		for(int i = 0; i < crossoverPointTransition; i++){
 			child.transitionStrategy[i] = parent1.transitionStrategy[i];
 		}
