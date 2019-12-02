@@ -67,7 +67,7 @@ public class EA implements Runnable{
 	//2.very high mutation rate and high number of mutation positions, replace random = provide with new random solutions
 	//3.mid mutation rate replace in tournament
 	public void run() {
-		Parameters.maxIterations = 500;
+		Parameters.maxIterations = 200;
 		initialiseIslands(Parameters.islandsN);
 		iteration = 0;
 //set island parameters
@@ -97,7 +97,7 @@ public class EA implements Runnable{
 		is.crossover = "uniform";
 		is.mutation = "random";
 		is.replacement = "oldest";
-		is.selection = "ranking";
+		is.selection = "fitnessproportionate";
 		is.parameters.crossoverProbability = 1.0;
 		is.parameters.mutationProbability = 0.8;
 		is.parameters.mutationRateMax = 20;
