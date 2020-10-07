@@ -8,23 +8,26 @@ A program is provided in which a cycling race in a velodrome is simulated. The a
 
 ## Methodology
 
-![initial_times](https://github.com/Willyees/Emergent-Computing-CW/blob/assets/assets/initial_times.png)
-
 Multiple GitHub branches have been created in which different Evolutionary Algorithms have been attempted to solve the problem:
 hill climber, island, restricted mating, simulated annealing and speciation.
+
 Additionally, it has been explored the effect of modifying default parameters, understanding their effect on the race time and on the algorithm learning-speed. 
-Some variants of main components of the EAs have been experimented (for example the use of a tournament selection rather than a best children chosen)
+Some variants of main components of the EAs have been experimented (for example the use of a tournament selection rather than a best children chosen).
+
 The fitness function has been explored, aiming to obtain a good optimum in a mid-long time algorithm run.
 
+![initial_times](https://github.com/Willyees/Emergent-Computing-CW/blob/assets/assets/initial_times.png)
 
 ## Observations
 By observing the algorithm running it was noticed a problem of early convergence, leading to one of the biggest problem of the algorithm: local optima. This was noticed to be a product of a very static population with many similar (even same) chromosomes. Variations of inner functionalities have been explored to find out the best to be applied.
+
 Additionally, it has been quite challenging to improve the fitness function, because it was found that the search space is very vast but the number of correct chromosomes that would lead to a finishing race is very slim compared to the total. Without a fitness function that would direct the search towards correct chromosomes, it would take a very long time to obtain correct solutions just by mutating (very unlikely since search space is vast).
+
 After implementing these algorithms it was understood that the most suitable are the ones that can easily work with a rough search space. The hill climber is not very suitable and the simulated annealing works slightly better. 
 The EA and the Island are the most suitable because there were implemented functions to diversify population and escape optimums.
 
 
-More in detail info, observations and procedures followed in improving the race time can be found in the [report](./report.pdf)
+**More in detail info, observations and procedures followed in improving the race time can be found in the [report](./report.pdf)**
 
 ![final_times](https://github.com/Willyees/Emergent-Computing-CW/blob/assets/assets/final_times.png)
 
